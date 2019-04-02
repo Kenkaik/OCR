@@ -29,7 +29,8 @@ namespace MRVisionLib
 
         private Mat GettingImage;
         private bool IsGettingImage;
-        private bool IsCreateMaskAndWaferRect = false;
+        private bool IsCreatedMaskAndWaferRect = false;
+        private bool IsCreatedCommonRect = false;
         public MatchPosition WaferMp
         {
             get;set;
@@ -41,7 +42,8 @@ namespace MRVisionLib
 
         private SKWindowLearnPair Mask;
         private SKWindowLearnPair Wafer;
-        
+        private SKWindowLearnPair Common;
+
 
 
         //point//
@@ -59,9 +61,13 @@ namespace MRVisionLib
         {
             get; set;
         }
-        public bool EnableRectRoi
+        public bool EnableRectMaskAndWafer
         {
             get; set;
+        }
+        public bool EnableRectCommonRoi
+        {
+            get;set;
         }
         public bool EnableRectLineScanArea
         {
@@ -89,18 +95,21 @@ namespace MRVisionLib
         {
             IsMouseDown = true;
             PtMousedown = e.Location;
-            if (EnableRectRoi)
+            if (EnableRectCommonRoi) Common.PatternRoiMouseDown(e);
+            if (EnableRectMaskAndWafer)
             {
                 Mask.PatternRoiMouseDown(e);
                 Wafer.PatternRoiMouseDown(e);
-            }   
+            }
+           
         }
 
         private void SKZoomAndPanWindow_MouseUp(object sender, MouseEventArgs e)
         {
             IsMouseDown = false;
             OldPt = AftZoomRoiLeftUpPt;
-            if (EnableRectRoi)
+            if (EnableRectCommonRoi) Common.PatternRoiMouseUp();
+            if (EnableRectMaskAndWafer)
             {
                 Mask.PatternRoiMouseUp();
                 Wafer.PatternRoiMouseUp();
@@ -112,8 +121,17 @@ namespace MRVisionLib
         private void SKZoomAndPanWindow_MouseMove(object sender, MouseEventArgs e)
         {
             PtMouseMove = e.Location;
-            if (!IsCreateMaskAndWaferRect) return;
-            if (EnableRectRoi)
+            if (!IsCreatedMaskAndWaferRect) return;
+            if (!IsCreatedCommonRect) return;
+
+            if (EnableRectCommonRoi)
+            {
+                Common.PatternRoiMouseMove(e, AftZoomRoiLeftUpPt, FitWindowImageWidth, FitWindowImageHeight, Ratio[RatioIndex]);
+                if (Common.IsAdjustStatus) return;
+                if (Common.IsInRoi == false) Cursor = Cursors.Arrow;
+            }
+            
+            if (EnableRectMaskAndWafer)
             {
                 if (!Mask.IsAdjustStatus)
                     Wafer.PatternRoiMouseMove(e, AftZoomRoiLeftUpPt, FitWindowImageWidth, FitWindowImageHeight, Ratio[RatioIndex]);
@@ -205,12 +223,19 @@ namespace MRVisionLib
                 float w3 = FitWindowImageHeight, w4 = image.Height;
                 ImgMagnificationY = w3 / w4;
                 image.Dispose();
-                if (!IsCreateMaskAndWaferRect)
+                if (!IsCreatedMaskAndWaferRect)
                 {
                     Mask = new SKWindowLearnPair(new Rectangle((int)(ClientSize.Width * 0.4), (int)(ClientSize.Height * 0.4), (int)(ClientSize.Width / 5), (int)(ClientSize.Width / 5)), this);
                     Wafer = new SKWindowLearnPair(new Rectangle((int)(ClientSize.Width * 0.45), (int)(ClientSize.Height * 0.45), (int)(ClientSize.Width / 10), (int)(ClientSize.Width / 10)), this);
-                    IsCreateMaskAndWaferRect = true;
+                    IsCreatedMaskAndWaferRect = true;
                 }
+                if (!IsCreatedCommonRect)
+                {
+                    Common = new SKWindowLearnPair(new Rectangle((int)(ClientSize.Width * 0.4), (int)(ClientSize.Height * 0.4), (int)(ClientSize.Width / 5), (int)(ClientSize.Width / 5)), this);
+                    IsCreatedCommonRect = true;
+                }
+                
+
             }
             catch (Exception)
             {
@@ -248,7 +273,7 @@ namespace MRVisionLib
                             CvInvoke.Rectangle(DstImage, new Rectangle(10, 10 + 15 * RatioIndex, 15, 8),
                                 new Emgu.CV.Structure.MCvScalar(0, 200, 0), -1);
                         }                       
-                        if (EnableRectRoi)
+                        if (EnableRectMaskAndWafer)
                         {
                             DstImage = Mask.DrawPatternRectangle(DstImage, Ratio[RatioIndex], AftZoomRoiLeftUpPt, new Emgu.CV.Structure.MCvScalar(0, 255, 0));
                             DstImage = Wafer.DrawPatternRectangle(DstImage, Ratio[RatioIndex], AftZoomRoiLeftUpPt, new Emgu.CV.Structure.MCvScalar(0, 0, 255));
@@ -257,6 +282,10 @@ namespace MRVisionLib
                                 CvInvoke.PutText(DstImage, "Vertical", new Point((int)Mask.PatternRoi.X - 10, (int)Mask.PatternRoi.Y - 10), FontFace.HersheyComplexSmall, 1, new Emgu.CV.Structure.MCvScalar(0, 255, 0));
                                 CvInvoke.PutText(DstImage, "Horizontal", new Point((int)Wafer.PatternRoi.X - 10, (int)Wafer.PatternRoi.Y - 10), FontFace.HersheyComplexSmall, 1, new Emgu.CV.Structure.MCvScalar(0, 0, 255));
                             }
+                        }
+                        if (EnableRectCommonRoi)
+                        {
+                            DstImage = Common.DrawPatternRectangle(DstImage, Ratio[RatioIndex], AftZoomRoiLeftUpPt, new Emgu.CV.Structure.MCvScalar(255, 0, 0));
                         }
                         if (EnableTrackPattern)
                         {
@@ -339,6 +368,13 @@ namespace MRVisionLib
         {
             RectangleF correctRectF = new RectangleF(Wafer.PatternRoi.X / ImgMagnificationX, Wafer.PatternRoi.Y / ImgMagnificationY
                 , Wafer.PatternRoi.Width / ImgMagnificationX, Wafer.PatternRoi.Height / ImgMagnificationY);
+            Rectangle correctRect = Rectangle.Round(correctRectF);
+            return correctRect;
+        }
+        public Rectangle GetCommonRectangle()
+        {
+            RectangleF correctRectF = new RectangleF(Common.PatternRoi.X / ImgMagnificationX, Common.PatternRoi.Y / ImgMagnificationY
+                , Common.PatternRoi.Width / ImgMagnificationX, Common.PatternRoi.Height / ImgMagnificationY);
             Rectangle correctRect = Rectangle.Round(correctRectF);
             return correctRect;
         }

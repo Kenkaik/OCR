@@ -28,26 +28,116 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.StartCamera = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.labelOcrRectX = new System.Windows.Forms.Label();
+            this.labelOcrRectY = new System.Windows.Forms.Label();
+            this.labelOcrRectWidth = new System.Windows.Forms.Label();
+            this.labelOcrRectHeight = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.buttonSaveTemplate = new System.Windows.Forms.Button();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.skZoomAndPanWindow1 = new MRVisionLib.SKZoomAndPanWindow();
+            this.buttonFindTemplate = new System.Windows.Forms.Button();
+            this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
+            // 
+            // StartCamera
+            // 
+            this.StartCamera.Location = new System.Drawing.Point(881, 43);
+            this.StartCamera.Name = "StartCamera";
+            this.StartCamera.Size = new System.Drawing.Size(157, 59);
+            this.StartCamera.TabIndex = 1;
+            this.StartCamera.Text = "Start camera";
+            this.StartCamera.UseCompatibleTextRendering = true;
+            this.StartCamera.UseVisualStyleBackColor = true;
+            this.StartCamera.Click += new System.EventHandler(this.StartCamera_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.labelOcrRectHeight);
+            this.groupBox1.Controls.Add(this.labelOcrRectWidth);
+            this.groupBox1.Controls.Add(this.labelOcrRectY);
+            this.groupBox1.Controls.Add(this.labelOcrRectX);
+            this.groupBox1.Location = new System.Drawing.Point(881, 242);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(157, 163);
+            this.groupBox1.TabIndex = 2;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "OcrRectInfo";
+            // 
+            // labelOcrRectX
+            // 
+            this.labelOcrRectX.AutoSize = true;
+            this.labelOcrRectX.Location = new System.Drawing.Point(7, 38);
+            this.labelOcrRectX.Name = "labelOcrRectX";
+            this.labelOcrRectX.Size = new System.Drawing.Size(25, 12);
+            this.labelOcrRectX.TabIndex = 0;
+            this.labelOcrRectX.Text = "X = ";
+            // 
+            // labelOcrRectY
+            // 
+            this.labelOcrRectY.AutoSize = true;
+            this.labelOcrRectY.Location = new System.Drawing.Point(9, 66);
+            this.labelOcrRectY.Name = "labelOcrRectY";
+            this.labelOcrRectY.Size = new System.Drawing.Size(25, 12);
+            this.labelOcrRectY.TabIndex = 1;
+            this.labelOcrRectY.Text = "Y = ";
+            // 
+            // labelOcrRectWidth
+            // 
+            this.labelOcrRectWidth.AutoSize = true;
+            this.labelOcrRectWidth.Location = new System.Drawing.Point(6, 98);
+            this.labelOcrRectWidth.Name = "labelOcrRectWidth";
+            this.labelOcrRectWidth.Size = new System.Drawing.Size(46, 12);
+            this.labelOcrRectWidth.TabIndex = 2;
+            this.labelOcrRectWidth.Text = "Width = ";
+            // 
+            // labelOcrRectHeight
+            // 
+            this.labelOcrRectHeight.AutoSize = true;
+            this.labelOcrRectHeight.Location = new System.Drawing.Point(7, 125);
+            this.labelOcrRectHeight.Name = "labelOcrRectHeight";
+            this.labelOcrRectHeight.Size = new System.Drawing.Size(48, 12);
+            this.labelOcrRectHeight.TabIndex = 3;
+            this.labelOcrRectHeight.Text = "Height = ";
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(881, 43);
+            this.button1.Location = new System.Drawing.Point(881, 141);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(157, 59);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Start camera";
-            this.button1.UseCompatibleTextRendering = true;
+            this.button1.Size = new System.Drawing.Size(157, 48);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "GetOcrAreaInfo";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // buttonSaveTemplate
+            // 
+            this.buttonSaveTemplate.Location = new System.Drawing.Point(881, 428);
+            this.buttonSaveTemplate.Name = "buttonSaveTemplate";
+            this.buttonSaveTemplate.Size = new System.Drawing.Size(157, 61);
+            this.buttonSaveTemplate.TabIndex = 4;
+            this.buttonSaveTemplate.Text = "SaveTemplate";
+            this.buttonSaveTemplate.UseVisualStyleBackColor = true;
+            this.buttonSaveTemplate.Click += new System.EventHandler(this.buttonSaveTemplate_Click);
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Location = new System.Drawing.Point(881, 505);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(157, 132);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 5;
+            this.pictureBox1.TabStop = false;
             // 
             // skZoomAndPanWindow1
             // 
             this.skZoomAndPanWindow1.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.skZoomAndPanWindow1.EnableRectCommonRoi = false;
             this.skZoomAndPanWindow1.EnableRectLineScanArea = false;
-            this.skZoomAndPanWindow1.EnableRectRoi = false;
+            this.skZoomAndPanWindow1.EnableRectMaskAndWafer = false;
             this.skZoomAndPanWindow1.EnableTrackPattern = false;
             this.skZoomAndPanWindow1.EnableZoom = false;
             this.skZoomAndPanWindow1.Location = new System.Drawing.Point(30, 43);
@@ -57,16 +147,34 @@
             this.skZoomAndPanWindow1.TabIndex = 0;
             this.skZoomAndPanWindow1.WaferMp = null;
             // 
-            // Form1
+            // buttonFindTemplate
+            // 
+            this.buttonFindTemplate.Location = new System.Drawing.Point(881, 665);
+            this.buttonFindTemplate.Name = "buttonFindTemplate";
+            this.buttonFindTemplate.Size = new System.Drawing.Size(157, 23);
+            this.buttonFindTemplate.TabIndex = 6;
+            this.buttonFindTemplate.Text = "FindTemplate";
+            this.buttonFindTemplate.UseVisualStyleBackColor = true;
+            this.buttonFindTemplate.Click += new System.EventHandler(this.buttonFindTemplate_Click);
+            // 
+            // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1112, 812);
+            this.Controls.Add(this.buttonFindTemplate);
+            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.buttonSaveTemplate);
             this.Controls.Add(this.button1);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.StartCamera);
             this.Controls.Add(this.skZoomAndPanWindow1);
-            this.Name = "Form1";
+            this.Name = "FormMain";
             this.Text = "Form1";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -74,7 +182,16 @@
         #endregion
 
         private MRVisionLib.SKZoomAndPanWindow skZoomAndPanWindow1;
+        private System.Windows.Forms.Button StartCamera;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label labelOcrRectHeight;
+        private System.Windows.Forms.Label labelOcrRectWidth;
+        private System.Windows.Forms.Label labelOcrRectY;
+        private System.Windows.Forms.Label labelOcrRectX;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button buttonSaveTemplate;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Button buttonFindTemplate;
     }
 }
 
