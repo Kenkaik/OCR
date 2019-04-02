@@ -31,7 +31,12 @@ namespace ManualExposureSystem
         {
             try
             {
-                if(!Cam.IsOpen) Cam.OpenCamera();
+                if (!Cam.IsOpen) Cam.OpenCamera();
+                else
+                {
+                    MessageBox.Show("Camera opened already", "LiveDisplayCamVideo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 Mat mat = null;
                 while (Cam.IsOpen)
                 {

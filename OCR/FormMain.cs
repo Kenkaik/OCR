@@ -13,21 +13,22 @@ using Emgu.CV.OCR;
 
 namespace OCR
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         public static bool AppEnding = false;
 
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
+            this.Text = "OcrTest";
         }
         MRVisionLib.Pylon5NetToMat Cam;
         private void button1_Click(object sender, EventArgs e)
         {
             Cam = new MRVisionLib.Pylon5NetToMat("22270744");
             ManualExposureSystem.DisplayCamVideoOnSKZoomWindow camThread = new ManualExposureSystem.DisplayCamVideoOnSKZoomWindow();
-            camThread.Cam = Cam;
-            camThread.Window = skZoomAndPanWindow1;
+            camThread.Cam = this.Cam;
+            camThread.Window = this.skZoomAndPanWindow1;
             camThread.Window.EnableZoom = true;
             camThread.IsLive = true;
             Thread t = new Thread(camThread.LiveDisplayCamVideo);

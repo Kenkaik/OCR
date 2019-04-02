@@ -222,9 +222,13 @@ namespace MRVisionLib
         */
         public void StopCamera()
         {
-            Cam.StreamGrabber.Stop();
-            Cam.Close();
-            IsOpen = false;
+            if (IsOpen)
+            {
+                Cam.StreamGrabber.Stop();
+                Cam.Close();
+                IsOpen = false;
+            }
+            
         }
 
 

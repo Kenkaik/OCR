@@ -29,7 +29,7 @@ namespace MRVisionLib
 
         private Mat GettingImage;
         private bool IsGettingImage;
-
+        private bool IsCreateMaskAndWaferRect = false;
         public MatchPosition WaferMp
         {
             get;set;
@@ -80,9 +80,6 @@ namespace MRVisionLib
             this.DoubleBuffered = true;
             this.Focus();
 
-            Mask = new SKWindowLearnPair(new Rectangle(300, 300, 150, 150), this);
-            Wafer = new SKWindowLearnPair(new Rectangle(600, 300, 50, 50), this);
-
             Ratio[0] = 1;
             for (int i = 1; i < Ratio.Length; i++) Ratio[i] = Ratio[i - 1] * 1.5f;
 
@@ -115,7 +112,7 @@ namespace MRVisionLib
         private void SKZoomAndPanWindow_MouseMove(object sender, MouseEventArgs e)
         {
             PtMouseMove = e.Location;
-
+            if (!IsCreateMaskAndWaferRect) return;
             if (EnableRectRoi)
             {
                 if (!Mask.IsAdjustStatus)
@@ -201,13 +198,19 @@ namespace MRVisionLib
                 if ((ClientSize.Width / image.Width - ClientSize.Height / image.Height) > 0.05F
                     || (ClientSize.Width / image.Width - ClientSize.Height / image.Height) < -0.05F)
                 {
-                    MessageBox.Show("警告 輸入影像與輸出影像比例不一");
+                    MessageBox.Show("警告 輸入影像與輸出影像比例不一", "SKZoomAndPanWindow", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 }
                 float w1 = FitWindowImageWidth, w2 = image.Width;
                 ImgMagnificationX = w1 / w2;
                 float w3 = FitWindowImageHeight, w4 = image.Height;
                 ImgMagnificationY = w3 / w4;
                 image.Dispose();
+                if (!IsCreateMaskAndWaferRect)
+                {
+                    Mask = new SKWindowLearnPair(new Rectangle((int)(ClientSize.Width * 0.4), (int)(ClientSize.Height * 0.4), (int)(ClientSize.Width / 5), (int)(ClientSize.Width / 5)), this);
+                    Wafer = new SKWindowLearnPair(new Rectangle((int)(ClientSize.Width * 0.45), (int)(ClientSize.Height * 0.45), (int)(ClientSize.Width / 10), (int)(ClientSize.Width / 10)), this);
+                    IsCreateMaskAndWaferRect = true;
+                }
             }
             catch (Exception)
             {

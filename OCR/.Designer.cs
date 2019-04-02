@@ -1,6 +1,6 @@
 ﻿namespace OCR
 {
-    partial class Form1
+    partial class FormMain
     {
         /// <summary>
         /// 設計工具所需的變數。
