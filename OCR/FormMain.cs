@@ -36,7 +36,7 @@ namespace OCR
             Cam = new MRVisionLib.Pylon5NetToMat("22270744");
             ManualExposureSystem.DisplayCamVideoOnSKZoomWindow camThread = new ManualExposureSystem.DisplayCamVideoOnSKZoomWindow();
             camThread.Cam = this.Cam;
-            camThread.Window = this.skZoomAndPanWindow1;
+            camThread.Window = this.vidCameraLive;
             camThread.Window.EnableZoom = true;
             camThread.Window.EnableRectCommonRoi = true;
             camThread.IsLive = true;
@@ -61,7 +61,7 @@ namespace OCR
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Rectangle commonRect = skZoomAndPanWindow1.GetCommonRectangle();
+            Rectangle commonRect = vidCameraLive.GetCommonRectangle();
             labelOcrRectX.Text = "X = " + commonRect.X.ToString();
             labelOcrRectY.Text = "Y = " + commonRect.Y.ToString();
             labelOcrRectWidth.Text = "Width = " + commonRect.Width.ToString();
@@ -70,7 +70,7 @@ namespace OCR
 
         private void buttonSaveTemplate_Click(object sender, EventArgs e)
         {
-            Template = new Mat(skZoomAndPanWindow1.GetSrcImage(), skZoomAndPanWindow1.GetCommonRectangle());
+            Template = new Mat(vidCameraLive.GetSrcImage(), vidCameraLive.GetCommonRectangle());
             pictureBox1.Image = Template.Bitmap;
         }
 
@@ -78,9 +78,17 @@ namespace OCR
         {
             OpenCV3MatchUMat matcher = new OpenCV3MatchUMat();
             MatchPosition mp;
-            mp = matcher.MatchWithOption(skZoomAndPanWindow1.GetSrcImage(), Template, OpenCV3MatchUMat.AlignAlgorithm.patternMatch);
+            mp = matcher.MatchWithOption(vidCameraLive.GetSrcImage(), Template, OpenCV3MatchUMat.AlignAlgorithm.patternMatch);
             string msg = "X = " + mp.X + " , " + "Y = " + mp.Y;
             MessageBox.Show(msg, "FindTemplate");
+        }
+
+        private void buttonLearnChar_Click(object sender, EventArgs e)
+        {
+            //DialogOcrLearn Ocr = new DialogOcrLearn(vidCameraLive.GetSrcImage());
+            DialogOcrLearn Ocr = new DialogOcrLearn(CvInvoke.Imread("2_1NID146-01ID.jpg", Emgu.CV.CvEnum.ImreadModes.Grayscale));
+            Ocr.ShowDialog();
+            Ocr.Close();
         }
     }
 }
