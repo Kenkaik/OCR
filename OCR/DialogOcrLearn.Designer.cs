@@ -35,7 +35,7 @@
             // 
             // buttonLearn
             // 
-            this.buttonLearn.Location = new System.Drawing.Point(861, 22);
+            this.buttonLearn.Location = new System.Drawing.Point(872, 88);
             this.buttonLearn.Name = "buttonLearn";
             this.buttonLearn.Size = new System.Drawing.Size(132, 49);
             this.buttonLearn.TabIndex = 1;
@@ -49,9 +49,9 @@
             this.comboBoxSelectChar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.comboBoxSelectChar.Font = new System.Drawing.Font("Arial Narrow", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.comboBoxSelectChar.FormattingEnabled = true;
-            this.comboBoxSelectChar.Location = new System.Drawing.Point(1011, 22);
+            this.comboBoxSelectChar.Location = new System.Drawing.Point(872, 22);
             this.comboBoxSelectChar.Name = "comboBoxSelectChar";
-            this.comboBoxSelectChar.Size = new System.Drawing.Size(121, 28);
+            this.comboBoxSelectChar.Size = new System.Drawing.Size(132, 28);
             this.comboBoxSelectChar.TabIndex = 2;
             // 
             // vidOcrLearnImage
