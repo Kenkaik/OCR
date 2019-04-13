@@ -28,10 +28,31 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.vidOcrLearnImage = new MRVisionLib.SKZoomAndPanWindow();
             this.buttonLearn = new System.Windows.Forms.Button();
             this.comboBoxSelectChar = new System.Windows.Forms.ComboBox();
+            this.vidOcrLearnImage = new MRVisionLib.SKZoomAndPanWindow();
             this.SuspendLayout();
+            // 
+            // buttonLearn
+            // 
+            this.buttonLearn.Location = new System.Drawing.Point(861, 22);
+            this.buttonLearn.Name = "buttonLearn";
+            this.buttonLearn.Size = new System.Drawing.Size(132, 49);
+            this.buttonLearn.TabIndex = 1;
+            this.buttonLearn.Text = "LearnChar";
+            this.buttonLearn.UseVisualStyleBackColor = true;
+            this.buttonLearn.Click += new System.EventHandler(this.buttonLearn_Click);
+            // 
+            // comboBoxSelectChar
+            // 
+            this.comboBoxSelectChar.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSelectChar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.comboBoxSelectChar.Font = new System.Drawing.Font("Arial Narrow", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.comboBoxSelectChar.FormattingEnabled = true;
+            this.comboBoxSelectChar.Location = new System.Drawing.Point(1011, 22);
+            this.comboBoxSelectChar.Name = "comboBoxSelectChar";
+            this.comboBoxSelectChar.Size = new System.Drawing.Size(121, 28);
+            this.comboBoxSelectChar.TabIndex = 2;
             // 
             // vidOcrLearnImage
             // 
@@ -48,35 +69,18 @@
             this.vidOcrLearnImage.TabIndex = 0;
             this.vidOcrLearnImage.WaferMp = null;
             // 
-            // buttonLearn
-            // 
-            this.buttonLearn.Location = new System.Drawing.Point(861, 22);
-            this.buttonLearn.Name = "buttonLearn";
-            this.buttonLearn.Size = new System.Drawing.Size(132, 49);
-            this.buttonLearn.TabIndex = 1;
-            this.buttonLearn.Text = "LearnChar";
-            this.buttonLearn.UseVisualStyleBackColor = true;
-            this.buttonLearn.Click += new System.EventHandler(this.buttonLearn_Click);
-            // 
-            // comboBoxSelectChar
-            // 
-            this.comboBoxSelectChar.FormattingEnabled = true;
-            this.comboBoxSelectChar.Location = new System.Drawing.Point(1083, 22);
-            this.comboBoxSelectChar.Name = "comboBoxSelectChar";
-            this.comboBoxSelectChar.Size = new System.Drawing.Size(121, 20);
-            this.comboBoxSelectChar.TabIndex = 2;
-            // 
             // DialogOcrLearn
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1299, 722);
+            this.ClientSize = new System.Drawing.Size(1246, 766);
             this.Controls.Add(this.comboBoxSelectChar);
             this.Controls.Add(this.buttonLearn);
             this.Controls.Add(this.vidOcrLearnImage);
             this.Name = "DialogOcrLearn";
             this.Text = "DialogOcrLearn";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DialogOcrLearn_FormClosing);
+            this.Load += new System.EventHandler(this.DialogOcrLearn_Load);
             this.ResumeLayout(false);
 
         }

@@ -84,7 +84,7 @@ namespace MRVisionLib
 
         public OpenCV3MatchUMat()
         {
-            CvInvoke.UseOpenCL = false;
+            CvInvoke.UseOpenCL = true;
         }
 
         void ParabolaVertex(int x1, int x2, int x3, double y1, double y2, double y3, out double xv, out double yv)

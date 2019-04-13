@@ -26,7 +26,7 @@ namespace MRVisionLib
             try
             {
                 Cam = new Camera(serialNum);
-                CvInvoke.UseOpenCL = false;
+                CvInvoke.UseOpenCL = true;
             }
             catch(Exception ex)
             {

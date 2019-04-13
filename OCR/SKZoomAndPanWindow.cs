@@ -7,10 +7,7 @@ using System.Windows.Forms;
 using Emgu.CV;
 using System.Threading;
 using Emgu.CV.CvEnum;
-
-
-
-
+using System.Threading.Tasks;
 
 namespace MRVisionLib
 {
@@ -22,6 +19,7 @@ namespace MRVisionLib
         private float[] Ratio = new float[7];
 
         //image//
+        private object Lock = new object();
         private UMat SrcImage, FitWindowImage, DstImage;
         private int FitWindowImageWidth, FitWindowImageHeight;
         private float ImgMagnificationX;
@@ -53,8 +51,6 @@ namespace MRVisionLib
         private Point PtMouseMove = new Point(0, 0);
         private Point PtMousedown = new Point(0, 0);
         private Point PtMouseWheel = new Point(0, 0);
-
-        
 
         //switch//
         public bool EnableZoom
@@ -202,13 +198,13 @@ namespace MRVisionLib
             try
             {
                 if (image == null) return;
-                SrcImage =  image.GetUMat(Emgu.CV.CvEnum.AccessType.Fast);
                 if (IsGettingImage)
                 {
                     if (GettingImage != null) GettingImage.Dispose();
                     GettingImage = image.Clone();
                     IsGettingImage = false;
                 }
+                SrcImage =  image.GetUMat(Emgu.CV.CvEnum.AccessType.Fast);
                 FitWindowImage = new UMat();
                 CvInvoke.Resize(SrcImage, FitWindowImage, ClientSize, 0, 0, Emgu.CV.CvEnum.Inter.Linear); //to fit window
                 FitWindowImageWidth = FitWindowImage.Cols;
@@ -381,15 +377,16 @@ namespace MRVisionLib
 
         public Mat GetSrcImage()
         {
-            IsGettingImage = true;
-            while(true)
+            lock (Lock)
             {
-                if (IsGettingImage == false)
-                    return GettingImage;
-                Thread.Sleep(10);
+                IsGettingImage = true;
+                while (true)
+                {
+                    if (IsGettingImage == false)
+                        return GettingImage;
+                    Thread.Sleep(10);
+                }
             }
         }
-
-
     }
 }

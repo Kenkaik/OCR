@@ -12,7 +12,7 @@ using Emgu.CV;
 using Emgu.CV.OCR;
 
 using MRVisionLib;
-
+using System.Diagnostics;
 
 namespace OCR
 {
@@ -78,8 +78,19 @@ namespace OCR
         {
             OpenCV3MatchUMat matcher = new OpenCV3MatchUMat();
             MatchPosition mp;
-            mp = matcher.MatchWithOption(vidCameraLive.GetSrcImage(), Template, OpenCV3MatchUMat.AlignAlgorithm.patternMatch);
+
+
+            Stopwatch sw1 = Stopwatch.StartNew();
+            Mat s = vidCameraLive.GetSrcImage();
+            sw1.Stop();
+            MessageBox.Show(sw1.ElapsedMilliseconds.ToString());
+            Stopwatch sw2 = Stopwatch.StartNew();
+            mp = matcher.MatchWithOption(s, Template, OpenCV3MatchUMat.AlignAlgorithm.patternMatch);
             string msg = "X = " + mp.X + " , " + "Y = " + mp.Y;
+            sw2.Stop();
+            MessageBox.Show(sw2.ElapsedMilliseconds.ToString());
+
+
             MessageBox.Show(msg, "FindTemplate");
         }
 
@@ -88,7 +99,6 @@ namespace OCR
             //DialogOcrLearn Ocr = new DialogOcrLearn(vidCameraLive.GetSrcImage());
             DialogOcrLearn Ocr = new DialogOcrLearn(CvInvoke.Imread("2_1NID146-01ID.jpg", Emgu.CV.CvEnum.ImreadModes.Grayscale));
             Ocr.ShowDialog();
-            Ocr.Close();
         }
     }
 }
