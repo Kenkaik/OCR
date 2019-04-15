@@ -19,26 +19,67 @@ namespace OCR
         private Mat Sample;
         private string[] OcrFolderName = new string[] {"-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
         , "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+        private Mat[,] OcrMat= new Mat[37,64];
         bool IsStartLearning = false;
 
 
         public DialogOcrLearn(Mat sample)
         {
             InitializeComponent();
+            InitialLvCharImage();
+            InitialFolder();
+            InitialImageFile();
+            InitialLiOcrImage();
+            comboBoxSelectChar.SelectedIndex = 0;
+            lvCharImage.SmallImageList = ilOcrImage;
+            int x = ilOcrImage.Images.Count;
             this.Sample = sample;
+        }
 
+        private void InitialLiOcrImage()
+        {
+            foreach (var ocrMat in OcrMat)
+            {
+                if (ocrMat != null)
+                    ilOcrImage.Images.Add(ocrMat.Bitmap);
+            }
+                
+        }
+
+        private void InitialImageFile()
+        {
+            for (int i=0; i<37; i++)
+                for (int j=1; j<65; j++)
+                {
+                    string path = "OCR/" + OcrFolderName[i] + "/" + j.ToString() + ".jpg";
+                    if (System.IO.File.Exists(path))
+                        OcrMat[i, j] = CvInvoke.Imread(path, Emgu.CV.CvEnum.ImreadModes.Grayscale);
+                }
+                    
+        }
+
+        private void InitialFolder()
+        {
             if (!Directory.Exists("OCR"))
                 Directory.CreateDirectory("OCR");
-
-            foreach(string ocrChar in OcrFolderName)
+            foreach (string ocrChar in OcrFolderName)
             {
                 comboBoxSelectChar.Items.Add(ocrChar);
                 string path = "OCR/" + ocrChar;
                 if (!Directory.Exists(path))
                     Directory.CreateDirectory(path);
             }
-            comboBoxSelectChar.SelectedIndex = 0;
+        }
 
+        private void InitialLvCharImage()
+        {
+            lvCharImage.View = View.Details;
+            lvCharImage.GridLines = true;
+            lvCharImage.LabelEdit = false;
+            lvCharImage.FullRowSelect = true;
+            lvCharImage.Columns.Add("No", 100);
+            lvCharImage.Columns.Add("Image", 100);
+            
         }
 
         private void StartLearning()
@@ -65,7 +106,7 @@ namespace OCR
             DirectoryInfo dirInfo = new DirectoryInfo("OCR/" + OcrFolderName[comboBoxSelectChar.SelectedIndex]);
             if (dirInfo.GetFiles("*.jpg").Length >= 64)
             {
-                MessageBox.Show("Number of char has to < 64", "OCR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Quantity of char has to < 64", "OCR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             for (int i = 1; i<65; i++)
@@ -83,6 +124,11 @@ namespace OCR
         {
             Thread t = new Thread(StartLearning);
             t.Start();
+        }
+
+        private void comboBoxSelectChar_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

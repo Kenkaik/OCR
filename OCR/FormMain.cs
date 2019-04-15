@@ -97,7 +97,7 @@ namespace OCR
         private void buttonLearnChar_Click(object sender, EventArgs e)
         {
             //DialogOcrLearn Ocr = new DialogOcrLearn(vidCameraLive.GetSrcImage());
-            DialogOcrLearn Ocr = new DialogOcrLearn(CvInvoke.Imread("2_1NID146-01ID.jpg", Emgu.CV.CvEnum.ImreadModes.Grayscale));
+            DialogOcrLearn Ocr = new DialogOcrLearn(CvInvoke.Imread("100_1NID146-24ID.jpg", Emgu.CV.CvEnum.ImreadModes.Grayscale));
             Ocr.ShowDialog();
         }
     }
