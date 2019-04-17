@@ -70,12 +70,14 @@
             // lvImage
             // 
             this.lvImage.BackColor = System.Drawing.Color.Violet;
+            this.lvImage.Font = new System.Drawing.Font("Arial Narrow", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lvImage.Location = new System.Drawing.Point(1455, 197);
             this.lvImage.MultiSelect = false;
             this.lvImage.Name = "lvImage";
             this.lvImage.Size = new System.Drawing.Size(194, 319);
             this.lvImage.TabIndex = 4;
             this.lvImage.UseCompatibleStateImageBehavior = false;
+            this.lvImage.Click += new System.EventHandler(this.lvImage_Click);
             // 
             // buttonDelete
             // 

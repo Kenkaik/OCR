@@ -21,7 +21,6 @@ namespace OCR
         private string[] OcrFolderName = new string[] {"-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
         , "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
         private Mat[,] OcrMat = new Mat[37,64];
-        private string[,] OcrImageFilePath = new string[37, 64];
         bool IsStartLearning = false;
 
 
@@ -30,9 +29,42 @@ namespace OCR
             InitializeComponent();
             InitialFolder();
             InitialOcrImageFileToMat();
-            InitialListViewChar();
+            UpdateListViewChar();
             //comboBoxSelectChar.SelectedIndex = 0;
             this.Sample = sample;
+        }
+
+        private void DialogOcrLearn_Load(object sender, EventArgs e)
+        {
+            Thread t = new Thread(StartLearning);
+            t.Start();
+        }
+
+        private void StartLearning()
+        {
+            vidOcrLearnImage.EnableRectCommonRoi = true;
+            vidOcrLearnImage.EnableZoom = true;
+            IsStartLearning = true;
+            while (IsStartLearning)
+            {
+                vidOcrLearnImage.ImageInput(Sample.Clone());
+                vidOcrLearnImage.DisplayImage();
+                Thread.Sleep(30);
+            }
+        }
+
+        private void InitialFolder()
+        {
+            if (!Directory.Exists("OCR"))
+                Directory.CreateDirectory("OCR");
+
+            foreach (string ocrChar in OcrFolderName)
+            {
+                string path = "OCR/" + ocrChar;
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+            }
+
         }
 
         private void InitialOcrImageFileToMat()
@@ -44,28 +76,12 @@ namespace OCR
                     if (System.IO.File.Exists(path))
                     {
                         OcrMat[i, j] = CvInvoke.Imread(path, Emgu.CV.CvEnum.ImreadModes.Grayscale);
-                        OcrImageFilePath[i, j] = path;
                     }
                         
-                }
-                    
+                }          
         }
 
-        private void InitialFolder()
-        {
-            if (!Directory.Exists("OCR"))
-                Directory.CreateDirectory("OCR");
-            
-            foreach (string ocrChar in OcrFolderName)
-            {
-                string path = "OCR/" + ocrChar;
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-            }
-            
-        }
-
-        private void InitialListViewChar()
+        private void UpdateListViewChar()
         {
             lvChar.BeginUpdate();
             lvChar.Clear();
@@ -76,6 +92,8 @@ namespace OCR
             lvChar.FullRowSelect = true;
             lvChar.Columns.Add("Char", 100);
             lvChar.Columns.Add("Quantity", 100);
+            lvChar.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+            lvChar.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
 
             for (int i = 0; i < OcrFolderName.Length; i++)
             {
@@ -91,17 +109,27 @@ namespace OCR
             lvChar.EndUpdate();
         }
 
-        private void StartLearning()
+        private void Updatelvimage(int index)
         {
-            vidOcrLearnImage.EnableRectCommonRoi = true;
-            vidOcrLearnImage.EnableZoom = true;
-            IsStartLearning = true;
-            while (IsStartLearning)
-            {
-                vidOcrLearnImage.ImageInput(Sample.Clone());
-                vidOcrLearnImage.DisplayImage();
-                Thread.Sleep(30);
-            }
+
+            lvImage.Clear();
+            ilOcrImage.Images.Clear();
+            ilOcrImage.ImageSize = new Size(80, 80);
+            lvImage.LargeImageList = ilOcrImage;
+
+            int imageIndex = 0;
+            for (int j = 0; j < OcrMat.GetLength(1); j++)
+                if (OcrMat[index, j] != null)
+                {
+                    ilOcrImage.Images.Add(OcrMat[index, j].Bitmap);
+                    lvImage.Items.Add(j.ToString(), imageIndex);
+                    imageIndex++;
+                }
+            lvImage.Refresh();
+            lvChar.Items[index].Selected = true;
+            lvChar.Items[index].Focused = true;
+            lvChar.Items[index].EnsureVisible();
+            lvChar.Focus();
         }
 
         private void DialogOcrLearn_FormClosing(object sender, FormClosingEventArgs e)
@@ -118,36 +146,21 @@ namespace OCR
                 MessageBox.Show("Quantity of ocr image has to < 64", "OCR", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            for (int i = 0; i< OcrMat.GetLength(1); i++)
+            for (int j = 0; j< OcrMat.GetLength(1); j++)
             {
-                var path = "OCR/" + OcrFolderName[lvChar.FocusedItem.Index] + "/" + i.ToString() + ".jpg";
+                var path = "OCR/" + OcrFolderName[lvChar.FocusedItem.Index] + "/" + j.ToString() + ".jpg";
                 if (!(System.IO.File.Exists(path)))
                 {
+                    OcrMat[lvChar.FocusedItem.Index, j] = m;
                     CvInvoke.Imwrite(path, m);
                     break;
                 }   
             }
-            
-            for (int i=0; i<OcrMat.GetLength(1); i++)
-            {
-                if (OcrMat[lvChar.FocusedItem.Index, i] == null)
-                {
-                    OcrMat[lvChar.FocusedItem.Index, i] = m;
-                    break;
-                }   
-            }
-
 
             int index = lvChar.FocusedItem.Index;
-            InitialListViewChar();
+            UpdateListViewChar();
             Updatelvimage(index);
             
-        }
-
-        private void DialogOcrLearn_Load(object sender, EventArgs e)
-        {
-            Thread t = new Thread(StartLearning);
-            t.Start();
         }
 
         private void lvChar_Click(object sender, EventArgs e)
@@ -155,40 +168,23 @@ namespace OCR
             Updatelvimage(lvChar.FocusedItem.Index);
         }
 
-        private void Updatelvimage(int index)
-        {
-            
-            lvImage.Clear();
-            lvImage.LargeImageList = ilOcrImage;
-            ilOcrImage.Images.Clear();
-            ilOcrImage.ImageSize = new Size(80, 80);
-
-            for (int j = 0; j < OcrMat.GetLength(1); j++)
-                if (OcrMat[index, j] != null)
-                {
-                    ilOcrImage.Images.Add(OcrMat[index, j].Bitmap);
-                    lvImage.Items.Add("", j);
-                }
-            lvChar.Items[index].Selected = true;
-            lvChar.Items[index].Focused = true;
-            lvChar.Items[index].EnsureVisible();
-            lvChar.Focus();
-        }
-
         private void buttonDelete_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(lvImage.FocusedItem.ImageIndex.ToString());
-            int count = -1;
-            for (int j = 0; j < OcrMat.GetLength(1); j++)
-                if (OcrMat[lvChar.FocusedItem.Index, j] != null)
-                {
-                    count++;
-                    if (count == lvImage.FocusedItem.ImageIndex)
-                        break;
-                }
-            System.IO.File.Delete(OcrImageFilePath[lvChar.FocusedItem.Index, count]);        
-            OcrMat[lvChar.FocusedItem.Index, lvImage.FocusedItem.ImageIndex] = null;
-            Updatelvimage(lvChar.FocusedItem.Index);
+            string path = "OCR/" + OcrFolderName[lvChar.FocusedItem.Index] + "/" + lvImage.Items[lvImage.FocusedItem.Index].Text + ".jpg";
+
+            System.IO.File.Delete(path);        
+            OcrMat[lvChar.FocusedItem.Index, Convert.ToInt32(lvImage.Items[lvImage.FocusedItem.Index].Text)] = null;
+
+            int index = lvChar.FocusedItem.Index;
+            UpdateListViewChar();
+            Updatelvimage(index);
+
+            buttonDelete.Enabled = false;
+        }
+
+        private void lvImage_Click(object sender, EventArgs e)
+        {
+            buttonDelete.Enabled = true;
         }
     }
 }
