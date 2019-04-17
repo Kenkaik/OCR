@@ -30,9 +30,10 @@
         {
             this.components = new System.ComponentModel.Container();
             this.buttonLearn = new System.Windows.Forms.Button();
-            this.comboBoxSelectChar = new System.Windows.Forms.ComboBox();
-            this.lvCharImage = new System.Windows.Forms.ListView();
+            this.lvChar = new System.Windows.Forms.ListView();
             this.ilOcrImage = new System.Windows.Forms.ImageList(this.components);
+            this.lvImage = new System.Windows.Forms.ListView();
+            this.buttonDelete = new System.Windows.Forms.Button();
             this.vidOcrLearnImage = new MRVisionLib.SKZoomAndPanWindow();
             this.SuspendLayout();
             // 
@@ -47,35 +48,44 @@
             this.buttonLearn.UseVisualStyleBackColor = true;
             this.buttonLearn.Click += new System.EventHandler(this.buttonLearn_Click);
             // 
-            // comboBoxSelectChar
+            // lvChar
             // 
-            this.comboBoxSelectChar.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxSelectChar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.comboBoxSelectChar.Font = new System.Drawing.Font("Arial Narrow", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.comboBoxSelectChar.FormattingEnabled = true;
-            this.comboBoxSelectChar.Location = new System.Drawing.Point(1163, 28);
-            this.comboBoxSelectChar.Margin = new System.Windows.Forms.Padding(4);
-            this.comboBoxSelectChar.Name = "comboBoxSelectChar";
-            this.comboBoxSelectChar.Size = new System.Drawing.Size(175, 32);
-            this.comboBoxSelectChar.TabIndex = 2;
-            this.comboBoxSelectChar.SelectedIndexChanged += new System.EventHandler(this.comboBoxSelectChar_SelectedIndexChanged);
-            // 
-            // lvCharImage
-            // 
-            this.lvCharImage.FullRowSelect = true;
-            this.lvCharImage.GridLines = true;
-            this.lvCharImage.Location = new System.Drawing.Point(1376, 28);
-            this.lvCharImage.Name = "lvCharImage";
-            this.lvCharImage.Size = new System.Drawing.Size(273, 344);
-            this.lvCharImage.TabIndex = 3;
-            this.lvCharImage.UseCompatibleStateImageBehavior = false;
-            this.lvCharImage.View = System.Windows.Forms.View.Details;
+            this.lvChar.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lvChar.FullRowSelect = true;
+            this.lvChar.GridLines = true;
+            this.lvChar.Location = new System.Drawing.Point(1163, 197);
+            this.lvChar.Name = "lvChar";
+            this.lvChar.Size = new System.Drawing.Size(245, 319);
+            this.lvChar.TabIndex = 3;
+            this.lvChar.UseCompatibleStateImageBehavior = false;
+            this.lvChar.View = System.Windows.Forms.View.Details;
+            this.lvChar.Click += new System.EventHandler(this.lvChar_Click);
             // 
             // ilOcrImage
             // 
             this.ilOcrImage.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
             this.ilOcrImage.ImageSize = new System.Drawing.Size(16, 16);
             this.ilOcrImage.TransparentColor = System.Drawing.Color.Transparent;
+            // 
+            // lvImage
+            // 
+            this.lvImage.BackColor = System.Drawing.Color.Violet;
+            this.lvImage.Location = new System.Drawing.Point(1455, 197);
+            this.lvImage.MultiSelect = false;
+            this.lvImage.Name = "lvImage";
+            this.lvImage.Size = new System.Drawing.Size(194, 319);
+            this.lvImage.TabIndex = 4;
+            this.lvImage.UseCompatibleStateImageBehavior = false;
+            // 
+            // buttonDelete
+            // 
+            this.buttonDelete.Location = new System.Drawing.Point(1527, 140);
+            this.buttonDelete.Name = "buttonDelete";
+            this.buttonDelete.Size = new System.Drawing.Size(122, 31);
+            this.buttonDelete.TabIndex = 5;
+            this.buttonDelete.Text = "Delete";
+            this.buttonDelete.UseVisualStyleBackColor = true;
+            this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
             // 
             // vidOcrLearnImage
             // 
@@ -98,8 +108,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1661, 958);
-            this.Controls.Add(this.lvCharImage);
-            this.Controls.Add(this.comboBoxSelectChar);
+            this.Controls.Add(this.buttonDelete);
+            this.Controls.Add(this.lvImage);
+            this.Controls.Add(this.lvChar);
             this.Controls.Add(this.buttonLearn);
             this.Controls.Add(this.vidOcrLearnImage);
             this.Margin = new System.Windows.Forms.Padding(4);
@@ -115,8 +126,9 @@
 
         private MRVisionLib.SKZoomAndPanWindow vidOcrLearnImage;
         private System.Windows.Forms.Button buttonLearn;
-        private System.Windows.Forms.ComboBox comboBoxSelectChar;
-        private System.Windows.Forms.ListView lvCharImage;
+        private System.Windows.Forms.ListView lvChar;
         private System.Windows.Forms.ImageList ilOcrImage;
+        private System.Windows.Forms.ListView lvImage;
+        private System.Windows.Forms.Button buttonDelete;
     }
 }
