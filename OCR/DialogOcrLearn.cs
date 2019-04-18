@@ -12,6 +12,7 @@ using System.Threading;
 using System.Xml.Linq;
 using System.IO;
 using System.Diagnostics;
+using MRVisionLib;
 
 namespace OCR
 {
@@ -23,6 +24,8 @@ namespace OCR
         private Mat[,] OcrMat = new Mat[37,64];
         bool IsStartLearning = false;
 
+        Rectangle RoiArea;
+        
 
         public DialogOcrLearn(Mat sample)
         {
@@ -69,8 +72,8 @@ namespace OCR
 
         private void InitialOcrImageFileToMat()
         {
-            for (int i=0; i<37; i++)
-                for (int j=0; j<64; j++)
+            for (int i=0; i<OcrMat.GetLength(0); i++)
+                for (int j=0; j<OcrMat.GetLength(1); j++)
                 {
                     string path = "OCR/" + OcrFolderName[i] + "/" + j.ToString() + ".jpg";
                     if (System.IO.File.Exists(path))
@@ -185,6 +188,88 @@ namespace OCR
         private void lvImage_Click(object sender, EventArgs e)
         {
             buttonDelete.Enabled = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("Sure to select ?", "Select ROI Area", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
+                return;
+            RoiArea = vidOcrLearnImage.GetCommonRectangle();
+
+            Mat m = new Mat(vidOcrLearnImage.GetSrcImage(), RoiArea);
+            pictureBoxRoiArea.Image = m.Bitmap;
+        }
+
+        private void buttonDisplayRoiArea_Click(object sender, EventArgs e)
+        {
+            if (RoiArea.IsEmpty) return;
+            Mat m = new Mat(vidOcrLearnImage.GetSrcImage(), RoiArea);
+            CvInvoke.Imshow("m", m);
+            CvInvoke.WaitKey(1000);
+        }
+
+
+        private string StartOcr()
+        {
+            OpenCV3MatchUMat matcher = new OpenCV3MatchUMat();
+            MatchPosition[] mpTemp = new MatchPosition[30];
+
+            string ocrResult = string.Empty;
+
+            Mat sample = new Mat(vidOcrLearnImage.GetSrcImage(), RoiArea);
+
+
+            int count = 0;
+            for (int i=0; i<OcrMat.GetLength(0); i++)
+                for (int j=0; j<OcrMat.GetLength(1); j++)
+                {
+                    if (OcrMat[i, j] == null) continue;
+                    count++;
+                    mpTemp[count] = matcher.MatchWithOption(sample, OcrMat[i, j], OpenCV3MatchUMat.AlignAlgorithm.patternMatch);
+                    mpTemp[count].Char = Convert.ToChar(OcrFolderName[i]);
+                }
+
+
+            int RecgonizeCharQuantity = 0;
+
+            for(int i=0; i<mpTemp.Length; i++)
+            {
+                if (mpTemp[i] != null)
+                    RecgonizeCharQuantity++;
+            }
+
+            
+
+            MatchPosition[] mp = new MatchPosition[RecgonizeCharQuantity];
+            int count1 = 0;
+            for (int i = 0; i < mpTemp.Length; i++)
+                if (mpTemp[i] != null)
+                {
+                    mp[count1] = mpTemp[i];
+                    count1++;
+                }
+                             
+            for (int i = 0; i < mp.Length; i++)
+            {
+                if (mp[i].X < mp[0].X)
+                {
+                    MatchPosition temp = mp[0];
+                    mp[0] = mp[i];
+                    mp[i] = mp[0];
+                    i = -1;
+                }
+            }
+
+            foreach (var ch in mp)
+                ocrResult += ch.Char;
+
+
+            return ocrResult;
+        }
+
+        private void buttonStartOcr_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(StartOcr());
         }
     }
 }
