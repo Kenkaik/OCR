@@ -211,7 +211,7 @@ namespace OCR
 
         private string StartOcr()
         {
-            OpenCV3MatchUMat matcher = new OpenCV3MatchUMat();
+            SKOpenCV3MatchOCR matcher = new SKOpenCV3MatchOCR();
             MatchPosition[] mpTemp = new MatchPosition[30];
 
             string ocrResult = string.Empty;
@@ -225,7 +225,7 @@ namespace OCR
                 {
                     if (OcrMat[i, j] == null) continue;
                     count++;
-                    mpTemp[count] = matcher.MatchWithOption(sample, OcrMat[i, j], OpenCV3MatchUMat.AlignAlgorithm.patternMatch);
+                    mpTemp[count] = matcher.MatchWithOption(sample, OcrMat[i, j], SKOpenCV3MatchOCR.AlignAlgorithm.patternMatch);
                     mpTemp[count].Char = Convert.ToChar(OcrFolderName[i]);
                 }
 
@@ -249,16 +249,18 @@ namespace OCR
                     count1++;
                 }
                              
-            for (int i = 0; i < mp.Length; i++)
+            for (int i = 0; i < mp.Length - 1; i++)
             {
-                if (mp[i].X < mp[0].X)
+                if (mp[i+1].X < mp[i].X)
                 {
-                    MatchPosition temp = mp[0];
-                    mp[0] = mp[i];
-                    mp[i] = mp[0];
+                    MatchPosition temp = mp[i];
+                    mp[i] = mp[i + 1];
+                    mp[i + 1] = temp;
                     i = -1;
                 }
             }
+
+            mp.Reverse<MatchPosition>();
 
             foreach (var ch in mp)
                 ocrResult += ch.Char;
