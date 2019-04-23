@@ -209,54 +209,50 @@ namespace OCR
         }
 
 
-        private string StartOcr()
+        private void StartOcr(out Mat ocrResultImage, out string ocrResultString)
         {
+
+            ocrResultString = string.Empty;
             SKOpenCV3MatchOCR matcher = new SKOpenCV3MatchOCR();
 
 
             List<MatchPosition> mp = new List<MatchPosition>();
 
-            string ocrResult = string.Empty;
-
             Mat sample = new Mat(vidOcrLearnImage.GetSrcImage(), RoiArea);
-            
-            Mat template = CvInvoke.Imread("OCR/1/0.jpg", Emgu.CV.CvEnum.ImreadModes.Grayscale);
 
             double thresholdScore = 0.8;
 
             Stopwatch sw = Stopwatch.StartNew();
-            //mpTemp = matcher.OcrMatch(sample, template, thresholdScore);
-
             mp = matcher.OcrMatch(sample, OcrMat, OcrFolderName ,thresholdScore);
             sw.Stop();
             MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
 
             foreach (var item in mp)
-                ocrResult += item.Char;
+                ocrResultString += item.Char;
 
             for (int i=0; i<mp.Count; i++)
             {
                if (mp[i] != null)
                 {
-                    CvInvoke.Rectangle(sample, new Rectangle((int)mp[i].X, (int)mp[i].Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(0), 1, Emgu.CV.CvEnum.LineType.FourConnected);
+                    CvInvoke.Rectangle(sample, new Rectangle((int)mp[i].X, (int)mp[i].Y, (int)mp[i].TemplateSize.Width, (int)mp[i].TemplateSize.Height), new Emgu.CV.Structure.MCvScalar(0), 1, Emgu.CV.CvEnum.LineType.FourConnected);
                     if (i%2 == 1)
                         CvInvoke.PutText(sample, mp[i].Score.ToString("f2"), new Point((int)mp[i].X, (int)mp[i].Y - 3), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5, new Emgu.CV.Structure.MCvScalar(0));
                     else
-                        CvInvoke.PutText(sample, mp[i].Score.ToString("f2"), new Point((int)mp[i].X, (int)mp[i].Y + template.Height + 6), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5, new Emgu.CV.Structure.MCvScalar(0));
+                        CvInvoke.PutText(sample, mp[i].Score.ToString("f2"), new Point((int)mp[i].X, (int)mp[i].Y + (int)mp[i].TemplateSize.Height + 6), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5, new Emgu.CV.Structure.MCvScalar(0));
                 }
-
             }
-            CvInvoke.Imshow("sample", sample);
-            CvInvoke.WaitKey(1000);
 
+            ocrResultImage = sample;
 
-            return ocrResult;
         }
 
         private void buttonStartOcr_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(StartOcr());
+
+            StartOcr(out Mat ocrResultImage, out string ocrResultString);
+            textBoxOcrResult.Text = "Ocr Result : " + ocrResultString;
+            pictureBoxOcrResultImage.Image = ocrResultImage.Bitmap;
         }
     }
 }

@@ -23,6 +23,7 @@ namespace MRVisionLib
             CvInvoke.UseOpenCL = true;
         }
 
+
         public List<MatchPosition> OcrMatch(Mat sample, Mat[,] template, string[] ocrChar ,Double thresholdScore)
         {
             List<MatchPosition> mp = new List<MatchPosition>();
@@ -38,7 +39,13 @@ namespace MRVisionLib
                     {
                         int level = CalPryDownLevel(template[i, j]);
                         PryDown(sample, template[i, j], out Mat s, out Mat t, level);
-                        mp.AddRange(MultipleMatch(s, t, level, thresholdScore, Convert.ToChar(ocrChar[i]), out int occurenceTimes));
+                        List<MatchPosition> r = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
+                        foreach(var item in r)
+                        {
+                            item.Char = Convert.ToChar(ocrChar[i]);
+                            item.TemplateSize = template[i, j].Size;
+                        }
+                        mp.AddRange(r);
                     }
                 });
             });
@@ -80,28 +87,20 @@ namespace MRVisionLib
                     tempMp.Remove(value);
             mp = tempMp;
 
-            for(int i=0; i<mp.Count - 1; i++)
-            {
-                if (mp[i + 1].X < mp[i].X)
-                {
-                    MatchPosition temp = new MatchPosition();
-                    temp = mp[i];
-                    mp[i] = mp[i + 1];
-                    mp[i + 1] = temp;
-                    i = -1;
-                }
-            }
+            mp.Sort();
 
 
             for(int i=0; i<mp.Count - 1; i++)
             {
                 if (Math.Abs(mp[i].X - mp[i+1].X) < 5)
                 {
-                    mp.RemoveAt(i + 1);
+                    if (mp[i].Score > mp[i + 1].Score)
+                        mp.RemoveAt(i + 1);
+                    else
+                        mp.RemoveAt(i);
                     i = -1;
                 }
             }
-            
             return mp;
         }
 
@@ -144,7 +143,7 @@ namespace MRVisionLib
             }
         }
 
-        private List<MatchPosition> MultipleMatch(Mat sample, Mat template, int level, double thresholdScore, char ocrChar ,out int occurenceTimes)
+        private List<MatchPosition> MultipleMatch(Mat sample, Mat template, int level, double thresholdScore, out int occurenceTimes)
         {
             //MatchPosition[] mp = new MatchPosition[MaximunOccurence];
             List<MatchPosition> mp = new List<MatchPosition>();
@@ -168,7 +167,7 @@ namespace MRVisionLib
                 Point originSizeLoaction = new Point((int)(maxLocation.X * y), (int)(maxLocation.Y * y));
 
 
-                mp.Add(new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size) { Char = ocrChar});
+                mp.Add(new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size));
                 occurenceTimes++;
             }
 

@@ -78,6 +78,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SKOpenCV3MatchOCR.cs" />
+    <Compile Include="SKOpenCV3MatchPosition.cs" />
     <Compile Include="SKOpenCV3MatchUMat.cs" />
     <Compile Include="SKPylon5NetToMat.cs" />
     <Compile Include="SKWindowLearnPair.cs" />
