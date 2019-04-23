@@ -12,7 +12,8 @@ namespace MRVisionLib
 {
     class SKOpenCV3MatchOCR
     {
-        public int MinimiumArea = 256;
+        private int MaximunOccurence = 5;
+        public int MinimumArea = 128;
         public enum AlignAlgorithm { patternMatch, edgePatternMatch, lineScan };
 
         public SKOpenCV3MatchOCR()
@@ -20,163 +21,89 @@ namespace MRVisionLib
             CvInvoke.UseOpenCL = true;
         }
 
-        void ParabolaVertex(int x1, int x2, int x3, double y1, double y2, double y3, out double xv, out double yv)
+        public MatchPosition[] OcrMatch(Mat sample, Mat template, Double thresholdScore)
         {
-            double denom = (x1 - x2) * (x1 - x3) * (x2 - x3);
-            double A = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom;
-            double B = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / denom;
-            double C = (x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3) / denom;
+            MatchPosition[] mp = new MatchPosition[MaximunOccurence];
+            if (sample.IsEmpty || template.IsEmpty) return mp;
 
-            xv = -B / (2 * A);
-            yv = C - B * B / (4 * A);
+            int level = CalPryDownLevel(template);
+            PryDown(sample, template, out Mat s, out Mat t, level);
+            mp = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
+
+            //mp = MultipleMatch(sample, template, 0, thresholdScore, out int occurenceTimes);
+            
+            for (int o = MaximunOccurence - 1; o > occurenceTimes - 1; o--)
+                mp[o] = null;
+
+            return mp;
         }
 
-        float ParabolicInterpolation(float a, float b, float c)
+        private int CalPryDownLevel(Mat template)
         {
-            if (a - 2 * b + c == 0) return 0;
-            return 0.5f * (a - c) / (a - 2 * b + c);
-        }
-
-        float PyramidInterpolationLocalMax(float a, float b, float c)
-        {
-            if (b - (a < c ? a : c) == 0) return 0;
-            return 0.5f * (c - a) / (b - (a < c ? a : c));
-        }
-
-        float PyramidInterpolationLocalMin(float a, float b, float c)
-        {
-            if (b - (a > c ? a : c) == 0) return 0;
-            return 0.5f * (c - a) / (b - (a > c ? a : c));
-        }
-
-        MatchPosition CvMatch(Mat sample, Mat template)
-        {
-            Matrix<float> ret = new Matrix<float>(sample.Cols - template.Cols + 1, sample.Rows - template.Rows + 1);
-            CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
-
-            double minValue, maxValue;
-            Point minLocation, maxLocation;
-            double minValue1, maxValue1;
-            Point minLocation1, maxLocation1;
-            ret.MinMax(out minValue, out maxValue, out minLocation, out maxLocation);
-
-            ret.Data[maxLocation.Y, maxLocation.X] = 0;
-            ret.MinMax(out minValue1, out maxValue1, out minLocation1, out maxLocation1);
-
-
-            int mx = maxLocation.X;
-            int my = maxLocation.Y;
-
-            float sx = 0;
-            float sy = 0;
-            if (mx > 0 && mx < ret.Cols - 1 && my > 0 && my < ret.Rows - 1)
-            {
-                sx = PyramidInterpolationLocalMax(ret[my, mx - 1], ret[my, mx], ret[my, mx + 1]);
-                sy = PyramidInterpolationLocalMax(ret[my - 1, mx], ret[my, mx], ret[my + 1, mx]);
-            }
-
-            ret.Dispose();
-            return new MatchPosition(mx + sx, my + sy, (float)maxValue, template.Size);
-        }
-
-        MatchPosition MatchPyrDown(Mat sample, Mat template, int level)
-        {
-            MatchPosition mp;
-            if (level <= 0)
-                return CvMatch(sample, template);
-            else
-            {
-                Mat s = new Mat();
-                CvInvoke.PyrDown(sample, s, Emgu.CV.CvEnum.BorderType.Default);
-                Mat t = new Mat();
-                CvInvoke.PyrDown(template, t, Emgu.CV.CvEnum.BorderType.Default);
-                mp = MatchPyrDown(s, t, level - 1);
-                s.Dispose();
-                t.Dispose();
-            }
-
-            Rectangle r = new Rectangle((int)Math.Round(mp.X * 2) - 3, (int)Math.Round(mp.Y * 2) - 3, template.Cols + 6, template.Rows + 6);
-            if (r.X < 0) r.X = 0;
-            if (r.Y < 0) r.Y = 0;
-            if (r.X + r.Width > sample.Cols) r.Width = sample.Cols - r.X;
-            if (r.Y + r.Height > sample.Rows) r.Height = sample.Rows - r.Y;
-            Mat level2 = new Mat(sample, r);
-
-            MatchPosition p2 = CvMatch(level2, template);
-            p2.X += r.Left;
-            p2.Y += r.Top;
-            return p2;
-        }
-
-        MatchPosition PyramidMatch(Mat sample, Mat template)
-        {
-            int level = 0;
             Size sz = template.Size;
+            int level = 1;
             while (true)
             {
                 sz.Width = sz.Width / 2;
                 sz.Height = sz.Height / 2;
-                if (sz.Width * sz.Height > MinimiumArea)
+                if (sz.Width * sz.Height > MinimumArea)
                     level++;
                 else
                     break;
             }
-            MatchPosition mp = MatchPyrDown(sample, template, level);
-
-            mp.X += (template.Cols) / 2.0f;
-            mp.Y += (template.Rows) / 2.0f;
-            return mp;
+            return level;
         }
 
-        public MatchPosition Match(Mat sample, Mat template)
+        private void PryDown(Mat sample, Mat template, out Mat s, out Mat t, int level)
         {
-            MatchPosition mp = PyramidMatch(sample, template);
-            mp.ImageSize = sample.Size;
-
-            return mp;
-        }
-        /*
-        public MatchPosition Match(GrayImage sample, GrayImage template)
-        {
-            Mat s = new Mat(sample.Size, DepthType.Cv8U, 1);
-            s.SetTo<byte>(sample.Bits);
-            Mat t = new Mat(template.Size, DepthType.Cv8U, 1);
-            t.SetTo<byte>(template.Bits);
-
-            MatchPosition mp = Match(s, t);
-            return mp;
-        }
-        */
-
-        public MatchPosition MatchWithOption(Mat sample, Mat template, AlignAlgorithm algorithm)
-        {
-            if (algorithm == AlignAlgorithm.patternMatch)
-                return Match(sample, template);
-            if (algorithm == AlignAlgorithm.edgePatternMatch)
-                return MatchThickEdge(sample, template);
-            else
-                return null;
+            s = new Mat();
+            t = new Mat();
+            while (true)
+            {
+                CvInvoke.PyrDown(sample, s, Emgu.CV.CvEnum.BorderType.Default);
+                CvInvoke.PyrDown(template, t, Emgu.CV.CvEnum.BorderType.Default);
+                level--;
+                while(true)
+                {
+                    CvInvoke.PyrDown(s, s, Emgu.CV.CvEnum.BorderType.Default);
+                    CvInvoke.PyrDown(t, t, Emgu.CV.CvEnum.BorderType.Default);
+                    level--;
+                    if (level <= 0) break;
+                }
+                break;
+            }
         }
 
-        public MatchPosition MatchThickEdge(Mat sample, Mat template)
+        private MatchPosition[] MultipleMatch(Mat sample, Mat template, int level, double thresholdScore, out int occurenceTimes)
         {
+            MatchPosition[] mp = new MatchPosition[MaximunOccurence];
+            occurenceTimes = 0;
+            
+            while(true)
+            {
+                Matrix<float> ret = new Matrix<float>(sample.Cols - template.Cols + 1, sample.Rows - template.Rows + 1);
 
-            Mat thr1 = new Mat();
-            CvInvoke.AdaptiveThreshold(template, thr1, 255, Emgu.CV.CvEnum.AdaptiveThresholdType.MeanC, Emgu.CV.CvEnum.ThresholdType.Binary, 9, 4);
-            Mat sTemplate = new Mat();
-            CvInvoke.GaussianBlur(thr1, sTemplate, new Size(7, 7), 0);
-            thr1.Dispose();
+                CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
+                ret.MinMax(out double minValue, out double maxValue, out Point minLocation, out Point maxLocation);
 
-            Mat thr2 = new Mat();
-            CvInvoke.AdaptiveThreshold(sample, thr2, 255, Emgu.CV.CvEnum.AdaptiveThresholdType.MeanC, Emgu.CV.CvEnum.ThresholdType.Binary, 9, 4);
-            Mat sSample = new Mat();
-            CvInvoke.GaussianBlur(thr2, sSample, new Size(7, 7), 0);
-            thr2.Dispose();
+                if (maxValue < thresholdScore || occurenceTimes > 4)
+                    break;
+                else
+                    CvInvoke.Rectangle(sample, new Rectangle(maxLocation.X, maxLocation.Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(), -1, Emgu.CV.CvEnum.LineType.FourConnected);
 
-            OpenCV3MatchUMat matcher = new OpenCV3MatchUMat();
-            MatchPosition mp = matcher.Match(sSample, sTemplate);
+                
+                double a = Convert.ToDouble(2); double b = Convert.ToDouble(level); double y = Math.Pow(a, b);
 
+                Point originSizeLoaction = new Point((int)(maxLocation.X * y), (int)(maxLocation.Y * y));
+                mp[occurenceTimes] = new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size);
+                occurenceTimes++;
+            }
+
+            //CvInvoke.Imshow("sample", sample);
+            //CvInvoke.WaitKey(1);
             return mp;
+
         }
     }
+
 }

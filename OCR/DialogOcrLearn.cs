@@ -217,8 +217,95 @@ namespace OCR
             string ocrResult = string.Empty;
 
             Mat sample = new Mat(vidOcrLearnImage.GetSrcImage(), RoiArea);
+            
+            Mat template = CvInvoke.Imread("OCR/1/0.jpg", Emgu.CV.CvEnum.ImreadModes.Grayscale);
+
+            double thresholdScore = 0.8;
+
+            Stopwatch sw = Stopwatch.StartNew();
+            mpTemp = matcher.OcrMatch(sample, template, thresholdScore);
+            sw.Stop();
+            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+
+            for(int i=0; i<mpTemp.Length; i++)
+            {
+               if (mpTemp[i] != null)
+                    CvInvoke.Rectangle(sample, new Rectangle((int)mpTemp[i].X, (int)mpTemp[i].Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(0), -1, Emgu.CV.CvEnum.LineType.FourConnected);
+            }
+            CvInvoke.Imshow("sample", sample);
+            CvInvoke.WaitKey(1000);
+
+            
+
+            /*
+            Stopwatch sw1 = Stopwatch.StartNew();
+            Size sz = template.Size;
+            int level = 0;
+            int MinimumArea = 128;
+
+            while(true)
+            {
+                sz.Width = sz.Width / 2;
+                sz.Height = sz.Height / 2;
+                if (sz.Width * sz.Height > MinimumArea)
+                    level++;
+                else
+                    break;
+            }
+
+            while(true)
+            {
+                Mat s = new Mat();
+                CvInvoke.PyrDown(sample1, s, Emgu.CV.CvEnum.BorderType.Default);
+                Mat t = new Mat();
+                CvInvoke.PyrDown(template1, t, Emgu.CV.CvEnum.BorderType.Default);
+                level--;
+
+                if (level <= 0)
+                {
+                    
+                    Matrix<float> ret1 = new Matrix<float>(s.Cols - t.Cols + 1, s.Rows - t.Rows + 1);
+                    CvInvoke.MatchTemplate(s, t, ret1, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
+
+                    double minValue1, maxValue1;
+                    Point minLocation1, maxLocation1;
+                    ret1.MinMax(out minValue1, out maxValue1, out minLocation1, out maxLocation1);
+                    
+                    break;
+                }
+                    
+            }
+            sw1.Stop();
+            MessageBox.Show(sw1.ElapsedMilliseconds.ToString());
+
+            */
+
+            /*
+            Stopwatch sw = Stopwatch.StartNew();
+            Matrix<float> ret = new Matrix<float>(sample.Cols - template.Cols + 1, sample.Rows - template.Rows + 1);
+            CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
+
+            double minValue, maxValue;
+            Point minLocation, maxLocation;
+
+            sw.Stop();
+            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+
+            ret.MinMax(out minValue, out maxValue, out minLocation, out maxLocation);
+
+            CvInvoke.Rectangle(sample, new Rectangle(maxLocation.X, maxLocation.Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(0), -1, Emgu.CV.CvEnum.LineType.FourConnected);
+
+            CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
+            ret.MinMax(out minValue, out maxValue, out minLocation, out maxLocation);
+            CvInvoke.Rectangle(sample, new Rectangle(maxLocation.X, maxLocation.Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(0), -1, Emgu.CV.CvEnum.LineType.FourConnected);
+            MessageBox.Show(maxValue.ToString());
+
+            CvInvoke.Imshow("sample", sample);
+            CvInvoke.WaitKey(1000);
+            */
 
 
+            /*
             int count = 0;
             for (int i=0; i<OcrMat.GetLength(0); i++)
                 for (int j=0; j<OcrMat.GetLength(1); j++)
@@ -226,6 +313,11 @@ namespace OCR
                     if (OcrMat[i, j] == null) continue;
                     count++;
                     mpTemp[count] = matcher.MatchWithOption(sample, OcrMat[i, j], SKOpenCV3MatchOCR.AlignAlgorithm.patternMatch);
+
+                    Mat s = sample.Clone();
+                    CvInvoke.Circle(s, new Point((int)mpTemp[count].X, (int)mpTemp[count].Y), 10, new Emgu.CV.Structure.MCvScalar(255), 2, Emgu.CV.CvEnum.LineType.AntiAlias);
+                    CvInvoke.Imshow("s", s);
+                    CvInvoke.WaitKey(1000);
                     mpTemp[count].Char = Convert.ToChar(OcrFolderName[i]);
                 }
 
@@ -264,6 +356,7 @@ namespace OCR
 
             foreach (var ch in mp)
                 ocrResult += ch.Char;
+            */
 
 
             return ocrResult;
