@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 
 using MRVisionLib;
 using System.Drawing;
+using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace MRVisionLib
 {
     class SKOpenCV3MatchOCR
     {
         private int MaximunOccurence = 5;
-        public int MinimumArea = 128;
+        public int MinimumArea = 256;
         public enum AlignAlgorithm { patternMatch, edgePatternMatch, lineScan };
 
         public SKOpenCV3MatchOCR()
@@ -21,22 +23,89 @@ namespace MRVisionLib
             CvInvoke.UseOpenCL = true;
         }
 
-        public MatchPosition[] OcrMatch(Mat sample, Mat template, Double thresholdScore)
+        public List<MatchPosition> OcrMatch(Mat sample, Mat[,] template, string[] ocrChar ,Double thresholdScore)
         {
-            MatchPosition[] mp = new MatchPosition[MaximunOccurence];
-            if (sample.IsEmpty || template.IsEmpty) return mp;
+            List<MatchPosition> mp = new List<MatchPosition>();
+            if (sample.IsEmpty) return mp;
 
-            int level = CalPryDownLevel(template);
-            PryDown(sample, template, out Mat s, out Mat t, level);
-            mp = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
+
+            
+            Parallel.For(0, template.GetLength(0), i =>
+            {
+                Parallel.For(0, template.GetLength(1), j =>
+                {
+                    if (template[i, j] != null)
+                    {
+                        int level = CalPryDownLevel(template[i, j]);
+                        PryDown(sample, template[i, j], out Mat s, out Mat t, level);
+                        mp.AddRange(MultipleMatch(s, t, level, thresholdScore, Convert.ToChar(ocrChar[i]), out int occurenceTimes));
+                    }
+                });
+            });
+            
+            /*
+            Parallel.For(0, template.GetLength(0), i =>
+            {
+                for (int j=0; j < template.GetLength(1); j++)
+                {
+                    if (template[i, j] != null)
+                    {
+                        int level = CalPryDownLevel(template[i, j]);
+                        PryDown(sample, template[i, j], out Mat s, out Mat t, level);
+                        mp.AddRange(MultipleMatch(s, t, level, thresholdScore, Convert.ToChar(ocrChar[i]), out int occurenceTimes));
+                    }
+                }
+            });
+            */
+
+            mp = SortListMatchPosition(mp);
+
+            //int level = CalPryDownLevel(template);
+            //PryDown(sample, template, out Mat s, out Mat t, level);
+            //mp = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
 
             //mp = MultipleMatch(sample, template, 0, thresholdScore, out int occurenceTimes);
             
-            for (int o = MaximunOccurence - 1; o > occurenceTimes - 1; o--)
-                mp[o] = null;
+            //for (int o = MaximunOccurence - 1; o > occurenceTimes - 1; o--)
+            //    mp[o] = null;
 
             return mp;
         }
+
+        private List<MatchPosition> SortListMatchPosition(List<MatchPosition> mp)
+        {
+            var tempMp = new List<MatchPosition>(mp);
+            foreach (var value in mp)
+                if (value == null)
+                    tempMp.Remove(value);
+            mp = tempMp;
+
+            for(int i=0; i<mp.Count - 1; i++)
+            {
+                if (mp[i + 1].X < mp[i].X)
+                {
+                    MatchPosition temp = new MatchPosition();
+                    temp = mp[i];
+                    mp[i] = mp[i + 1];
+                    mp[i + 1] = temp;
+                    i = -1;
+                }
+            }
+
+
+            for(int i=0; i<mp.Count - 1; i++)
+            {
+                if (Math.Abs(mp[i].X - mp[i+1].X) < 5)
+                {
+                    mp.RemoveAt(i + 1);
+                    i = -1;
+                }
+            }
+            
+            return mp;
+        }
+
+
 
         private int CalPryDownLevel(Mat template)
         {
@@ -63,7 +132,8 @@ namespace MRVisionLib
                 CvInvoke.PyrDown(sample, s, Emgu.CV.CvEnum.BorderType.Default);
                 CvInvoke.PyrDown(template, t, Emgu.CV.CvEnum.BorderType.Default);
                 level--;
-                while(true)
+                if (level <= 0) break;
+                while (true)
                 {
                     CvInvoke.PyrDown(s, s, Emgu.CV.CvEnum.BorderType.Default);
                     CvInvoke.PyrDown(t, t, Emgu.CV.CvEnum.BorderType.Default);
@@ -74,9 +144,10 @@ namespace MRVisionLib
             }
         }
 
-        private MatchPosition[] MultipleMatch(Mat sample, Mat template, int level, double thresholdScore, out int occurenceTimes)
+        private List<MatchPosition> MultipleMatch(Mat sample, Mat template, int level, double thresholdScore, char ocrChar ,out int occurenceTimes)
         {
-            MatchPosition[] mp = new MatchPosition[MaximunOccurence];
+            //MatchPosition[] mp = new MatchPosition[MaximunOccurence];
+            List<MatchPosition> mp = new List<MatchPosition>();
             occurenceTimes = 0;
             
             while(true)
@@ -86,7 +157,7 @@ namespace MRVisionLib
                 CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
                 ret.MinMax(out double minValue, out double maxValue, out Point minLocation, out Point maxLocation);
 
-                if (maxValue < thresholdScore || occurenceTimes > 4)
+                if (maxValue < thresholdScore || occurenceTimes > MaximunOccurence - 1)
                     break;
                 else
                     CvInvoke.Rectangle(sample, new Rectangle(maxLocation.X, maxLocation.Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(), -1, Emgu.CV.CvEnum.LineType.FourConnected);
@@ -95,14 +166,15 @@ namespace MRVisionLib
                 double a = Convert.ToDouble(2); double b = Convert.ToDouble(level); double y = Math.Pow(a, b);
 
                 Point originSizeLoaction = new Point((int)(maxLocation.X * y), (int)(maxLocation.Y * y));
-                mp[occurenceTimes] = new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size);
+
+
+                mp.Add(new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size) { Char = ocrChar});
                 occurenceTimes++;
             }
 
             //CvInvoke.Imshow("sample", sample);
             //CvInvoke.WaitKey(1);
             return mp;
-
         }
     }
 

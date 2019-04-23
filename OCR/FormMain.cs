@@ -20,7 +20,7 @@ namespace OCR
     {
         public static bool AppEnding = false;
         Mat Template;
-        Mat Sample;
+        //Mat Sample;
 
 
 
