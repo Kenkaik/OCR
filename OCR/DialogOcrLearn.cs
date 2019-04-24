@@ -225,7 +225,7 @@ namespace OCR
             Stopwatch sw = Stopwatch.StartNew();
             mp = matcher.OcrMatch(sample, OcrMat, OcrFolderName ,thresholdScore);
             sw.Stop();
-            MessageBox.Show(sw.ElapsedMilliseconds.ToString());
+            //MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
 
             foreach (var item in mp)
@@ -243,8 +243,9 @@ namespace OCR
                 }
             }
 
-            ocrResultImage = sample;
+            textBoxOcrCalTime.Text = "Time(ms) = " + sw.ElapsedMilliseconds.ToString();
 
+            ocrResultImage = sample;
         }
 
         private void buttonStartOcr_Click(object sender, EventArgs e)

@@ -29,8 +29,6 @@ namespace MRVisionLib
             List<MatchPosition> mp = new List<MatchPosition>();
             if (sample.IsEmpty) return mp;
 
-
-            
             Parallel.For(0, template.GetLength(0), i =>
             {
                 Parallel.For(0, template.GetLength(1), j =>
@@ -40,42 +38,21 @@ namespace MRVisionLib
                         int level = CalPryDownLevel(template[i, j]);
                         PryDown(sample, template[i, j], out Mat s, out Mat t, level);
                         List<MatchPosition> r = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
-                        foreach(var item in r)
-                        {
-                            item.Char = Convert.ToChar(ocrChar[i]);
-                            item.TemplateSize = template[i, j].Size;
+                        List<MatchPosition> r1 = new List<MatchPosition>();
+                        r1 = r;
+                        foreach (var item in r)
+                        { 
+                            r1[r1.IndexOf(item)].Char = Convert.ToChar(ocrChar[i]);
+                            r1[r1.IndexOf(item)].TemplateSize = template[i, j].Size;
+                            //item.Char = Convert.ToChar(ocrChar[i]);
+                            //item.TemplateSize = template[i, j].Size;
                         }
+                        r = r1;
                         mp.AddRange(r);
                     }
                 });
             });
-            
-            /*
-            Parallel.For(0, template.GetLength(0), i =>
-            {
-                for (int j=0; j < template.GetLength(1); j++)
-                {
-                    if (template[i, j] != null)
-                    {
-                        int level = CalPryDownLevel(template[i, j]);
-                        PryDown(sample, template[i, j], out Mat s, out Mat t, level);
-                        mp.AddRange(MultipleMatch(s, t, level, thresholdScore, Convert.ToChar(ocrChar[i]), out int occurenceTimes));
-                    }
-                }
-            });
-            */
-
             mp = SortListMatchPosition(mp);
-
-            //int level = CalPryDownLevel(template);
-            //PryDown(sample, template, out Mat s, out Mat t, level);
-            //mp = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
-
-            //mp = MultipleMatch(sample, template, 0, thresholdScore, out int occurenceTimes);
-            
-            //for (int o = MaximunOccurence - 1; o > occurenceTimes - 1; o--)
-            //    mp[o] = null;
-
             return mp;
         }
 
@@ -88,7 +65,6 @@ namespace MRVisionLib
             mp = tempMp;
 
             mp.Sort();
-
 
             for(int i=0; i<mp.Count - 1; i++)
             {
@@ -170,9 +146,6 @@ namespace MRVisionLib
                 mp.Add(new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size));
                 occurenceTimes++;
             }
-
-            //CvInvoke.Imshow("sample", sample);
-            //CvInvoke.WaitKey(1);
             return mp;
         }
     }

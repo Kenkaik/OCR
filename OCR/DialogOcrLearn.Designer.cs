@@ -39,6 +39,7 @@
             this.buttonStartOcr = new System.Windows.Forms.Button();
             this.textBoxOcrResult = new System.Windows.Forms.TextBox();
             this.pictureBoxOcrResultImage = new System.Windows.Forms.PictureBox();
+            this.textBoxOcrCalTime = new System.Windows.Forms.TextBox();
             this.vidOcrLearnImage = new MRVisionLib.SKZoomAndPanWindow();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRoiArea)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOcrResultImage)).BeginInit();
@@ -89,10 +90,10 @@
             // 
             // buttonDelete
             // 
-            this.buttonDelete.Location = new System.Drawing.Point(1145, 585);
+            this.buttonDelete.Location = new System.Drawing.Point(1145, 577);
             this.buttonDelete.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.buttonDelete.Name = "buttonDelete";
-            this.buttonDelete.Size = new System.Drawing.Size(92, 25);
+            this.buttonDelete.Size = new System.Drawing.Size(92, 26);
             this.buttonDelete.TabIndex = 5;
             this.buttonDelete.Text = "Delete";
             this.buttonDelete.UseVisualStyleBackColor = true;
@@ -125,7 +126,7 @@
             this.buttonStartOcr.Location = new System.Drawing.Point(872, 577);
             this.buttonStartOcr.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.buttonStartOcr.Name = "buttonStartOcr";
-            this.buttonStartOcr.Size = new System.Drawing.Size(98, 33);
+            this.buttonStartOcr.Size = new System.Drawing.Size(98, 26);
             this.buttonStartOcr.TabIndex = 8;
             this.buttonStartOcr.Text = "Start OCR";
             this.buttonStartOcr.UseVisualStyleBackColor = true;
@@ -150,6 +151,15 @@
             this.pictureBoxOcrResultImage.TabIndex = 10;
             this.pictureBoxOcrResultImage.TabStop = false;
             // 
+            // textBoxOcrCalTime
+            // 
+            this.textBoxOcrCalTime.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.textBoxOcrCalTime.Location = new System.Drawing.Point(979, 577);
+            this.textBoxOcrCalTime.Name = "textBoxOcrCalTime";
+            this.textBoxOcrCalTime.Size = new System.Drawing.Size(156, 26);
+            this.textBoxOcrCalTime.TabIndex = 11;
+            this.textBoxOcrCalTime.Text = "Time(ms) = ";
+            // 
             // vidOcrLearnImage
             // 
             this.vidOcrLearnImage.BackColor = System.Drawing.SystemColors.AppWorkspace;
@@ -170,6 +180,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1246, 766);
+            this.Controls.Add(this.textBoxOcrCalTime);
             this.Controls.Add(this.pictureBoxOcrResultImage);
             this.Controls.Add(this.textBoxOcrResult);
             this.Controls.Add(this.buttonStartOcr);
@@ -204,5 +215,6 @@
         private System.Windows.Forms.Button buttonStartOcr;
         private System.Windows.Forms.TextBox textBoxOcrResult;
         private System.Windows.Forms.PictureBox pictureBoxOcrResultImage;
+        private System.Windows.Forms.TextBox textBoxOcrCalTime;
     }
 }
