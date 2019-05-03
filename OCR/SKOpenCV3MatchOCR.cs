@@ -15,8 +15,10 @@ namespace MRVisionLib
     class SKOpenCV3MatchOCR
     {
         private int MaximunOccurence = 5;
-        public int MinimumArea = 256;
+        public int MinimumArea = 128;
         public enum AlignAlgorithm { patternMatch, edgePatternMatch, lineScan };
+        private object Lock  = new object();
+
 
         public SKOpenCV3MatchOCR()
         {
@@ -35,20 +37,27 @@ namespace MRVisionLib
                 {
                     if (template[i, j] != null)
                     {
-                        int level = CalPryDownLevel(template[i, j]);
-                        PryDown(sample, template[i, j], out Mat s, out Mat t, level);
-                        List<MatchPosition> r = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
-                        List<MatchPosition> r1 = new List<MatchPosition>();
-                        r1 = r;
-                        foreach (var item in r)
-                        { 
-                            r1[r1.IndexOf(item)].Char = Convert.ToChar(ocrChar[i]);
-                            r1[r1.IndexOf(item)].TemplateSize = template[i, j].Size;
-                            //item.Char = Convert.ToChar(ocrChar[i]);
-                            //item.TemplateSize = template[i, j].Size;
-                        }
-                        r = r1;
-                        mp.AddRange(r);
+                        lock(Lock)
+                        {
+                            int level = CalPryDownLevel(template[i, j]);
+                            PryDown(sample, template[i, j], out Mat s, out Mat t, level);
+                            List<MatchPosition> r = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
+                            List<MatchPosition> r1 = new List<MatchPosition>();
+                            r1 = r;
+                            foreach (var item in r)
+                            {
+                                r1[r1.IndexOf(item)].Char = Convert.ToChar(ocrChar[i]);
+                                r1[r1.IndexOf(item)].TemplateSize = template[i, j].Size;
+                                //item.Char = Convert.ToChar(ocrChar[i]);
+                                //item.TemplateSize = template[i, j].Size;
+                            }
+                            r = r1;
+
+                            r1 = PryUpMatch(sample, template[i, j], r);
+                            r = r1;
+
+                            mp.AddRange(r);
+                        }  
                     }
                 });
             });
@@ -85,15 +94,15 @@ namespace MRVisionLib
         private int CalPryDownLevel(Mat template)
         {
             Size sz = template.Size;
-            int level = 1;
+            int level = 0;
             while (true)
             {
-                sz.Width = sz.Width / 2;
-                sz.Height = sz.Height / 2;
                 if (sz.Width * sz.Height > MinimumArea)
                     level++;
                 else
                     break;
+                sz.Width = sz.Width / 2;
+                sz.Height = sz.Height / 2;  
             }
             return level;
         }
@@ -104,17 +113,22 @@ namespace MRVisionLib
             t = new Mat();
             while (true)
             {
+                if (level <= 0)
+                {
+                    s = sample.Clone();
+                    t = template.Clone();
+                    break;
+                }
+                level--;
                 CvInvoke.PyrDown(sample, s, Emgu.CV.CvEnum.BorderType.Default);
                 CvInvoke.PyrDown(template, t, Emgu.CV.CvEnum.BorderType.Default);
-                level--;
-                if (level <= 0) break;
-                while (true)
-                {
-                    CvInvoke.PyrDown(s, s, Emgu.CV.CvEnum.BorderType.Default);
-                    CvInvoke.PyrDown(t, t, Emgu.CV.CvEnum.BorderType.Default);
-                    level--;
-                    if (level <= 0) break;
-                }
+                    while (true)
+                    {
+                        if (level <= 0) break;
+                        level--;
+                        CvInvoke.PyrDown(s, s, Emgu.CV.CvEnum.BorderType.Default);
+                        CvInvoke.PyrDown(t, t, Emgu.CV.CvEnum.BorderType.Default);                
+                    }
                 break;
             }
         }
@@ -132,22 +146,50 @@ namespace MRVisionLib
                 CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
                 ret.MinMax(out double minValue, out double maxValue, out Point minLocation, out Point maxLocation);
 
+                Rectangle rectMask = new Rectangle(maxLocation.X + (int)(0.3*template.Width), maxLocation.Y + (int)(0.3*template.Height), (int)(0.7*template.Width), (int)(0.7*template.Height));
+
                 if (maxValue < thresholdScore || occurenceTimes > MaximunOccurence - 1)
                     break;
                 else
-                    CvInvoke.Rectangle(sample, new Rectangle(maxLocation.X, maxLocation.Y, template.Width, template.Height), new Emgu.CV.Structure.MCvScalar(), -1, Emgu.CV.CvEnum.LineType.FourConnected);
+                    CvInvoke.Rectangle(sample, rectMask, new Emgu.CV.Structure.MCvScalar(), -1, Emgu.CV.CvEnum.LineType.FourConnected);
 
-                
                 double a = Convert.ToDouble(2); double b = Convert.ToDouble(level); double y = Math.Pow(a, b);
-
                 Point originSizeLoaction = new Point((int)(maxLocation.X * y), (int)(maxLocation.Y * y));
-
-
                 mp.Add(new MatchPosition(originSizeLoaction.X, originSizeLoaction.Y, (float)maxValue, template.Size));
                 occurenceTimes++;
             }
             return mp;
         }
+        
+        private List<MatchPosition> PryUpMatch(Mat sample, Mat template, List<MatchPosition> mp)
+        {
+            List<MatchPosition> mp1 = mp;
+            for (int i=0; i<mp.Count; i++)
+            {
+                if (mp[i] != null)
+                {
+                    
+                    RectangleF smallSampleRectF = new RectangleF(mp[i].X - mp[i].TemplateSize.Width / 2 - 5, mp[i].Y - mp[i].TemplateSize.Height / 2 - 5,
+                        mp[i].TemplateSize.Width + 5, mp[i].TemplateSize.Height + 5);
+                    Rectangle smallSampleRect = Rectangle.Round(smallSampleRectF);
+                    if (smallSampleRect.Left <= 0 || smallSampleRect.Top <= 0 || smallSampleRect.Right >= sample.Width || smallSampleRect.Bottom >= sample.Height)
+                        continue;
+                    Mat smallSample = new Mat(sample, smallSampleRect);
+
+                    Matrix<float> ret = new Matrix<float>(smallSample.Cols - template.Cols + 1, smallSample.Rows - template.Rows + 1);
+                    CvInvoke.MatchTemplate(smallSample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
+                    ret.MinMax(out double minValue, out double maxValue, out Point minLocation, out Point maxLocation);
+                    mp1[i].X = maxLocation.X;
+                    mp1[i].Y = maxLocation.Y;
+                    mp1[i].Score = (float)maxValue;                    
+                }
+            }
+            return mp1;    
+        }
+
+
+
+
     }
 
 }

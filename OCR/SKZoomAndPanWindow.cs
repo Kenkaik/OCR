@@ -8,6 +8,7 @@ using Emgu.CV;
 using System.Threading;
 using Emgu.CV.CvEnum;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace MRVisionLib
 {
@@ -29,20 +30,24 @@ namespace MRVisionLib
         private bool IsGettingImage;
         private bool IsCreatedMaskAndWaferRect = false;
         private bool IsCreatedCommonRect = false;
+        private bool IsShowedWarning = false;
         public MatchPosition WaferMp
         {
-            get;set;
+            get; set;
         }
         public MatchPosition MaskMp
         {
-            get;set;
+            get; set;
         }
 
         private SKWindowLearnPair Mask;
         private SKWindowLearnPair Wafer;
         private SKWindowLearnPair Common;
 
-
+        public List<MatchPosition> OcrInfoMp
+        {
+            get;set;
+        }
 
         //point//
         private bool IsMouseDown = false;
@@ -73,7 +78,10 @@ namespace MRVisionLib
         {
             get;set;
         }
-        
+        public bool EnableShowOcrInfo
+        {
+            get;set;
+        }
 
         public SKZoomAndPanWindow()
         {
@@ -212,7 +220,9 @@ namespace MRVisionLib
                 if ((ClientSize.Width / image.Width - ClientSize.Height / image.Height) > 0.05F
                     || (ClientSize.Width / image.Width - ClientSize.Height / image.Height) < -0.05F)
                 {
-                    MessageBox.Show("警告 輸入影像與輸出影像比例不一", "SKZoomAndPanWindow", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    if (!IsShowedWarning)
+                        MessageBox.Show("警告 輸入影像與輸出影像比例不一", "SKZoomAndPanWindow", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    IsShowedWarning = true;
                 }
                 float w1 = FitWindowImageWidth, w2 = image.Width;
                 ImgMagnificationX = w1 / w2;
@@ -259,7 +269,7 @@ namespace MRVisionLib
                         DstImage = new UMat(roi, s);
 
                         CvInvoke.CvtColor(DstImage, DstImage, Emgu.CV.CvEnum.ColorConversion.Gray2Bgr);
-                        if (EnableZoom) //draw zoomled
+                        if (EnableZoom) //draw zoom led
                         {
                             for (int i = 0; i < Ratio.Length; i++)
                             {
@@ -302,6 +312,30 @@ namespace MRVisionLib
                                 }
                             }
                         }
+                        if (EnableShowOcrInfo)
+                        {
+                            if (OcrInfoMp.Count > 0)
+                            {
+                                for (int i = 0; i < OcrInfoMp.Count; i++)
+                                {
+                                    if (OcrInfoMp[i] != null)
+                                    {
+                                        Rectangle ocrRect = new Rectangle((int)OcrInfoMp[i].X, (int)OcrInfoMp[i].Y, (int)OcrInfoMp[i].TemplateSize.Width, (int)OcrInfoMp[i].TemplateSize.Height);
+                                        ocrRect.X = (int)(ocrRect.X * ImgMagnificationX * Ratio[RatioIndex] - s.X);
+                                        ocrRect.Y = (int)(ocrRect.Y * ImgMagnificationY * Ratio[RatioIndex] - s.Y);
+                                        ocrRect.Width = (int)(ocrRect.Width * ImgMagnificationX * Ratio[RatioIndex]);
+                                        ocrRect.Height = (int)(ocrRect.Height * ImgMagnificationY * Ratio[RatioIndex]);
+
+                                        CvInvoke.PutText(DstImage, OcrInfoMp[i].Char.ToString(), new Point((int)ocrRect.X, (int)(ocrRect.Y - ocrRect.Height * 0.5)), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 1 * Ratio[RatioIndex], new Emgu.CV.Structure.MCvScalar(0));
+                                        CvInvoke.Rectangle(DstImage, ocrRect, new Emgu.CV.Structure.MCvScalar(0), 1, Emgu.CV.CvEnum.LineType.FourConnected);
+                                        if (i % 2 == 1)
+                                            CvInvoke.PutText(DstImage, OcrInfoMp[i].Score.ToString("f2"), new Point((int)ocrRect.X, (int)(ocrRect.Y - ocrRect.Height * 0.1)), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5 * Ratio[RatioIndex], new Emgu.CV.Structure.MCvScalar(0));
+                                        else
+                                            CvInvoke.PutText(DstImage, OcrInfoMp[i].Score.ToString("f2"), new Point((int)ocrRect.X, (int)(ocrRect.Y + ocrRect.Height * 1.3)), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5 * Ratio[RatioIndex], new Emgu.CV.Structure.MCvScalar(0));
+                                    }
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -318,6 +352,16 @@ namespace MRVisionLib
                 throw;
             }
         }
+
+        public UMat ShowOcrInfo(UMat img)
+        {
+            
+            return img;
+        }
+
+
+
+
 
 
         Graphics G;

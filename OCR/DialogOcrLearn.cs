@@ -231,18 +231,30 @@ namespace OCR
             foreach (var item in mp)
                 ocrResultString += item.Char;
 
-            for (int i=0; i<mp.Count; i++)
+
+            for (int i = 0; i < mp.Count; i++)
             {
-               if (mp[i] != null)
+                if (mp[i] != null)
                 {
                     CvInvoke.Rectangle(sample, new Rectangle((int)mp[i].X, (int)mp[i].Y, (int)mp[i].TemplateSize.Width, (int)mp[i].TemplateSize.Height), new Emgu.CV.Structure.MCvScalar(0), 1, Emgu.CV.CvEnum.LineType.FourConnected);
-                    if (i%2 == 1)
+                    if (i % 2 == 1)
                         CvInvoke.PutText(sample, mp[i].Score.ToString("f2"), new Point((int)mp[i].X, (int)mp[i].Y - 3), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5, new Emgu.CV.Structure.MCvScalar(0));
                     else
                         CvInvoke.PutText(sample, mp[i].Score.ToString("f2"), new Point((int)mp[i].X, (int)mp[i].Y + (int)mp[i].TemplateSize.Height + 6), Emgu.CV.CvEnum.FontFace.HersheyComplexSmall, 0.5, new Emgu.CV.Structure.MCvScalar(0));
                 }
             }
+            foreach (var item in mp)
+            {
+                item.X += RoiArea.X;
+                item.Y += RoiArea.Y;
+            }
+            
+            
+            
 
+            vidOcrLearnImage.OcrInfoMp = mp;
+            vidOcrLearnImage.EnableShowOcrInfo = true;
+            
             textBoxOcrCalTime.Text = "Time(ms) = " + sw.ElapsedMilliseconds.ToString();
 
             ocrResultImage = sample;
