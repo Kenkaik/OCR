@@ -26,7 +26,7 @@ namespace MRVisionLib
         }
 
 
-        public List<MatchPosition> OcrMatch(Mat sample, Mat[,] template, string[] ocrChar ,Double thresholdScore)
+        public List<MatchPosition> OcrMatch(Mat sample, Mat[,] template, string[] ocrChar ,double lowResolutionThresholdScore, double highResolutionThresholdScore)
         {
             List<MatchPosition> mp = new List<MatchPosition>();
             if (sample.IsEmpty) return mp;
@@ -41,19 +41,17 @@ namespace MRVisionLib
                         {
                             int level = CalPryDownLevel(template[i, j]);
                             PryDown(sample, template[i, j], out Mat s, out Mat t, level);
-                            List<MatchPosition> r = MultipleMatch(s, t, level, thresholdScore, out int occurenceTimes);
+                            List<MatchPosition> r = MultipleMatch(s, t, level, lowResolutionThresholdScore, out int occurenceTimes);
                             List<MatchPosition> r1 = new List<MatchPosition>();
                             r1 = r;
                             foreach (var item in r)
                             {
                                 r1[r1.IndexOf(item)].Char = Convert.ToChar(ocrChar[i]);
                                 r1[r1.IndexOf(item)].TemplateSize = template[i, j].Size;
-                                //item.Char = Convert.ToChar(ocrChar[i]);
-                                //item.TemplateSize = template[i, j].Size;
                             }
                             r = r1;
 
-                            r1 = PryUpMatch(sample, template[i, j], r);
+                            r1 = PryUpMatch(sample, template[i, j], highResolutionThresholdScore, r);
                             r = r1;
 
                             mp.AddRange(r);
@@ -135,7 +133,6 @@ namespace MRVisionLib
 
         private List<MatchPosition> MultipleMatch(Mat sample, Mat template, int level, double thresholdScore, out int occurenceTimes)
         {
-            //MatchPosition[] mp = new MatchPosition[MaximunOccurence];
             List<MatchPosition> mp = new List<MatchPosition>();
             occurenceTimes = 0;
             
@@ -143,7 +140,7 @@ namespace MRVisionLib
             {
                 Matrix<float> ret = new Matrix<float>(sample.Cols - template.Cols + 1, sample.Rows - template.Rows + 1);
 
-                CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
+                CvInvoke.MatchTemplate(sample, template, ret, Emgu.CV.    CvEnum.TemplateMatchingType.CcoeffNormed);
                 ret.MinMax(out double minValue, out double maxValue, out Point minLocation, out Point maxLocation);
 
                 Rectangle rectMask = new Rectangle(maxLocation.X + (int)(0.3*template.Width), maxLocation.Y + (int)(0.3*template.Height), (int)(0.7*template.Width), (int)(0.7*template.Height));
@@ -161,7 +158,7 @@ namespace MRVisionLib
             return mp;
         }
         
-        private List<MatchPosition> PryUpMatch(Mat sample, Mat template, List<MatchPosition> mp)
+        private List<MatchPosition> PryUpMatch(Mat sample, Mat template, Double thresholdScore, List<MatchPosition> mp)
         {
             List<MatchPosition> mp1 = mp;
             for (int i=0; i<mp.Count; i++)
@@ -169,27 +166,34 @@ namespace MRVisionLib
                 if (mp[i] != null)
                 {
                     
-                    RectangleF smallSampleRectF = new RectangleF(mp[i].X - mp[i].TemplateSize.Width / 2 - 5, mp[i].Y - mp[i].TemplateSize.Height / 2 - 5,
-                        mp[i].TemplateSize.Width + 5, mp[i].TemplateSize.Height + 5);
+                    RectangleF smallSampleRectF = new RectangleF(mp[i].X - 5, mp[i].Y - 5,
+                        mp[i].TemplateSize.Width + 10, mp[i].TemplateSize.Height + 10);
                     Rectangle smallSampleRect = Rectangle.Round(smallSampleRectF);
                     if (smallSampleRect.Left <= 0 || smallSampleRect.Top <= 0 || smallSampleRect.Right >= sample.Width || smallSampleRect.Bottom >= sample.Height)
+                    {
+                        mp1[i] = null;
                         continue;
+                    }
                     Mat smallSample = new Mat(sample, smallSampleRect);
 
                     Matrix<float> ret = new Matrix<float>(smallSample.Cols - template.Cols + 1, smallSample.Rows - template.Rows + 1);
                     CvInvoke.MatchTemplate(smallSample, template, ret, Emgu.CV.CvEnum.TemplateMatchingType.CcoeffNormed);
                     ret.MinMax(out double minValue, out double maxValue, out Point minLocation, out Point maxLocation);
-                    mp1[i].X = maxLocation.X;
-                    mp1[i].Y = maxLocation.Y;
-                    mp1[i].Score = (float)maxValue;                    
+
+                    if (maxValue > thresholdScore)
+                    {
+                        mp1[i].X = maxLocation.X + (mp[i].X - 5);
+                        mp1[i].Y = maxLocation.Y + (mp[i].Y - 5);
+                        mp1[i].Score = (float)maxValue;
+                    }
+                    else
+                        mp1[i] = null;
+
+                    
                 }
             }
             return mp1;    
         }
-
-
-
-
     }
 
 }

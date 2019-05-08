@@ -220,10 +220,11 @@ namespace OCR
 
             Mat sample = new Mat(vidOcrLearnImage.GetSrcImage(), RoiArea);
 
-            double thresholdScore = 0.8;
+            double lowResolutionThresholdScore = 0.6;
+            double highResolutionThresholdScore = 0.9;
 
             Stopwatch sw = Stopwatch.StartNew();
-            mp = matcher.OcrMatch(sample, OcrMat, OcrFolderName ,thresholdScore);
+            mp = matcher.OcrMatch(sample, OcrMat, OcrFolderName , lowResolutionThresholdScore, highResolutionThresholdScore);
             sw.Stop();
             //MessageBox.Show(sw.ElapsedMilliseconds.ToString());
 
